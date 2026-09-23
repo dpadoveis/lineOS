@@ -1,0 +1,19 @@
+node_modules
+dist
+.DS_Store
+*.local
+
+# Backend
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+
+# Segredos do compose
+.env
+
+# Saída do Playwright (e2e/)
+test-results
+
+# Local secrets mounted into the API
+secrets/

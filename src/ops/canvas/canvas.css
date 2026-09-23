@@ -1,0 +1,169 @@
+/* The ops canvas in the Flow Editor's identity. Every colour is a token from
+   src/flow/theme.css; the card copies .fe-node's declarations. React Flow's
+   base.css gives structure only, so its chrome is styled here. */
+
+.ops-canvas {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  background: var(--bg);
+}
+.ops-canvas-wait {
+  display: grid;
+  place-items: center;
+  color: var(--mut);
+  font: 400 12px 'IBM Plex Mono', monospace;
+}
+
+/* --- the card: the editor's tokens, bigger for legibility --- */
+.ops-card {
+  width: 264px;
+  height: 112px;
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  border: 1px solid var(--edge1);
+  border-radius: 9px;
+  box-shadow: var(--nodesh);
+  cursor: pointer;
+  transition: opacity 0.15s, box-shadow 0.15s;
+}
+.ops-card:hover { box-shadow: var(--sh-node-hover); }
+.ops-card--run-success { border: 1.5px solid #6dddb8; }
+.ops-card--run-failed { border: 2px solid #ff6b5b; }
+.ops-card--run-running { border: 1.5px solid #7aa2f7; animation: ops-pulse 2s ease-in-out infinite; }
+.ops-card--run-skipped { border: 1.5px dashed #8fd5b8; }
+[data-theme="light"] .ops-card--run-success { border-color: #1a5a3d; }
+[data-theme="light"] .ops-card--run-failed { border-color: #8b2a1f; }
+[data-theme="light"] .ops-card--run-running { border-color: #3d59a1; }
+[data-theme="light"] .ops-card--run-skipped { border-color: #2d6649; }
+@keyframes ops-pulse { 50% { box-shadow: 0 0 0 4px rgba(122, 162, 247, 0.18); } }
+.react-flow__node.selected .ops-card { outline: 2px solid #e8c26a; outline-offset: 3px; }
+[data-theme="light"] .react-flow__node.selected .ops-card { outline-color: #8f783f; }
+/* Outside the lineage: faded and desaturated, so the flow reads at a glance. */
+.ops-card--dim { opacity: 0.12; filter: grayscale(0.7); }
+/* Inside the lineage (the selected node keeps its own ring): the lineage glow. */
+.ops-card--lit { box-shadow: 0 0 0 2px rgba(245, 216, 150, 0.75), 0 0 20px rgba(245, 216, 150, 0.25); }
+[data-theme="light"] .ops-card--lit { box-shadow: 0 0 0 2px rgba(143, 120, 63, 0.7), 0 0 16px rgba(143, 120, 63, 0.2); }
+
+.ops-card-top { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px 0; }
+.ops-card-kind { font: 600 9.5px 'IBM Plex Mono', monospace; letter-spacing: 0.08em; color: var(--mut2); }
+.ops-card-risk {
+  font: 600 9.5px 'IBM Plex Mono', monospace;
+  color: #ffc93a;
+  border: 1px dashed #8b7000;
+  border-radius: 3px;
+  padding: 1px 5px;
+}
+[data-theme="light"] .ops-card-risk { color: #8b6d00; border-color: #d4a600; }
+.ops-card-head { display: flex; align-items: center; gap: 10px; padding: 6px 12px; min-width: 0; }
+.ops-card-icon {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  box-shadow: var(--sh-chip);
+}
+.ops-card-name {
+  font: 500 14px/1.2 'IBM Plex Sans', sans-serif;
+  color: var(--txt);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ops-card-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin-top: auto;
+  padding: 0 12px 10px;
+}
+.ops-card-fresh {
+  font: 400 11px/1.2 'IBM Plex Mono', monospace;
+  color: var(--mut);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ops-card-compact { display: flex; align-items: center; gap: 12px; height: 100%; padding: 0 16px; min-width: 0; }
+.ops-card-compact .ops-card-icon { width: 48px; height: 48px; }
+.ops-card-compact-name {
+  flex: 1;
+  font: 600 20px/1.15 'IBM Plex Sans', sans-serif;
+  color: var(--txt);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ops-card-compact .ops-dot { width: 14px; height: 14px; }
+.ops-handle {
+  width: 1px;
+  height: 1px;
+  min-width: 0;
+  min-height: 0;
+  border: 0;
+  background: transparent;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* --- React Flow chrome, in editor tokens --- */
+.ops-canvas .react-flow__controls {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--edge1);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: var(--sh-2);
+}
+.ops-canvas .react-flow__controls-button {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: var(--btn);
+  border: 0;
+  border-bottom: 1px solid var(--edge1);
+  color: var(--txt);
+  cursor: pointer;
+}
+.ops-canvas .react-flow__controls-button:last-child { border-bottom: 0; }
+.ops-canvas .react-flow__controls-button:hover { background: var(--btnh); }
+.ops-canvas .react-flow__controls-button svg { width: 12px; height: 12px; fill: currentColor; }
+.ops-canvas .react-flow__minimap {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.ops-canvas .react-flow__attribution { background: transparent; }
+.ops-canvas .react-flow__attribution a { color: var(--mut3); font: 400 10px 'IBM Plex Mono', monospace; }
+
+/* --- layer bands, behind the nodes --- */
+.ops-band {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: 12px;
+  background: var(--line3);
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: -1;
+}
+.ops-band-label {
+  position: absolute;
+  top: 10px;
+  left: 14px;
+  font: 600 11px 'IBM Plex Mono', monospace;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mut2);
+}
+.ops-band--bronze .ops-band-label { color: #c08a5a; }
+.ops-band--silver .ops-band-label { color: #a4adb8; }
+.ops-band--gold .ops-band-label { color: #e8c26a; }

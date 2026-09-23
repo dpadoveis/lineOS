@@ -1,0 +1,167 @@
+.ops-screen {
+  padding: 2rem;
+  color: var(--txt);
+  max-width: 1200px;
+}
+
+.ops-screen h1 {
+  margin: 0 0 1.5rem 0;
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.ops-screen p {
+  margin: 0 0 1rem 0;
+  color: var(--txt3);
+}
+
+.ops-error {
+  background: var(--dangerbg);
+  border: 1px solid var(--danger);
+  border-radius: 4px;
+  padding: 1rem;
+  color: var(--danger);
+}
+
+.ops-unwatched {
+  background: var(--card);
+  border-left: 3px solid var(--mut);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  border-radius: 2px;
+}
+
+.ops-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ops-list li {
+  margin: 0;
+  padding: 0;
+}
+
+.ops-list button {
+  all: unset;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.ops-list button:hover {
+  background: var(--btn);
+}
+
+.ops-list__name {
+  flex: 1;
+  font-weight: 500;
+  text-align: left;
+}
+
+.ops-list__meta {
+  color: var(--txt3);
+  font-size: 0.875rem;
+}
+
+/* ── health badges ────────────────────────────────────────────────────── */
+
+.ops-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ok: normal weight, green background */
+.ops-badge--ok {
+  background: #0d3d2a;
+  color: #6dddb8;
+  border: 1px solid #1a5a3d;
+}
+
+/* skipped: pale green, indicates non-failure */
+.ops-badge--skipped {
+  background: #1a4a35;
+  color: #8fd5b8;
+  border: 1px solid #2d6649;
+  font-weight: 400;
+}
+
+/* late: amber with distinct appearance */
+.ops-badge--late {
+  background: #4a3a0a;
+  color: #ffc93a;
+  border: 2px dashed #8b7000;
+  padding: 0.2rem 0.45rem;
+}
+
+/* broken: red, prominent */
+.ops-badge--broken {
+  background: #3d1f1f;
+  color: #ff6b5b;
+  border: 2px solid #a03030;
+  padding: 0.2rem 0.45rem;
+  font-weight: 700;
+}
+
+/* no_data: gray, muted */
+.ops-badge--no_data {
+  background: #2a2a2a;
+  color: #999;
+  border: 1px dotted #555;
+}
+
+/* Light theme adjustments */
+[data-theme="light"] .ops-screen {
+  color: var(--txt);
+}
+
+[data-theme="light"] .ops-badge--ok {
+  background: #d4f5e8;
+  color: #1a5a3d;
+  border: 1px solid #7dccaa;
+}
+
+[data-theme="light"] .ops-badge--skipped {
+  background: #e0f5ea;
+  color: #2d6649;
+  border: 1px solid #a8d5c1;
+  font-weight: 400;
+}
+
+[data-theme="light"] .ops-badge--late {
+  background: #fffae5;
+  color: #8b6d00;
+  border: 2px dashed #d4a600;
+  padding: 0.2rem 0.45rem;
+}
+
+[data-theme="light"] .ops-badge--broken {
+  background: #ffebea;
+  color: #8b2a1f;
+  border: 2px solid #d95450;
+  padding: 0.2rem 0.45rem;
+  font-weight: 700;
+}
+
+[data-theme="light"] .ops-badge--no_data {
+  background: #f0f0f0;
+  color: #666;
+  border: 1px dotted #999;
+}
+

@@ -1,0 +1,107 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+* { box-sizing: border-box; }
+input, textarea { font-family: inherit; }
+input:focus, textarea:focus { outline: none; }
+
+:root, [data-theme="dark"] {
+  --bg: #0b0d10;
+  --panel: #101317;
+  --card: #151a20;
+  --head: #12161b;
+  --field: #0f1318;
+  --btn: #181c22;
+  --btnh: #1f242b;
+  --rowh: #131820;
+  --line: #23282f;
+  --line2: #1d2228;
+  --line3: #1a1f25;
+  --edge1: #2b313a;
+  --edge2: #3a424e;
+  --txt: #e6e8eb;
+  --txt2: #c8cdd4;
+  --txt3: #a4adb8;
+  --mut: #8b939e;
+  --mut2: #6d7681;
+  --mut3: #5c6572;
+  --mut4: #4d5561;
+  --grid: #1b2027;
+  --axis: #2f3742;
+  --dangerbg: #2a1f22;
+  --pop: 0 14px 40px rgba(0, 0, 0, .6);
+  --scrim: rgba(6, 8, 11, .58);
+  --nodesh: 0 6px 20px rgba(0, 0, 0, .45);
+  --danger: #e07a6a;
+}
+
+[data-theme="light"] {
+  --bg: #f3f4f6;
+  --panel: #ffffff;
+  --card: #ffffff;
+  --head: #f7f8fa;
+  --field: #f7f8fa;
+  --btn: #f1f3f6;
+  --btnh: #e7eaef;
+  --rowh: #f7f8fa;
+  --line: #e0e3e9;
+  --line2: #eceef2;
+  --line3: #eceef2;
+  --edge1: #d3d8e0;
+  --edge2: #b3bbc7;
+  --txt: #1a1f27;
+  --txt2: #3d4550;
+  --txt3: #4f5866;
+  --mut: #5f6875;
+  --mut2: #7b8492;
+  --mut3: #8d95a2;
+  --mut4: #a6aeba;
+  --grid: #d3d8e0;
+  --axis: #b6bec9;
+  --dangerbg: #fbe9e7;
+  --pop: 0 14px 40px rgba(20, 25, 35, .18);
+  --scrim: rgba(24, 28, 36, .34);
+  --nodesh: 0 4px 14px rgba(20, 25, 35, .1);
+}
+
+html, body { background: var(--bg); }
+
+/* ---------- elevation ----------
+   Shadows are a light-theme device: in the dark theme the contrast already
+   comes from the background, and a shadow over black only muddies the
+   interface. So the tokens exist in both themes but resolve to `none` in the
+   dark one -- the rules in FlowEditor.css can use var(--sh-*) unconditionally. */
+:root, [data-theme="dark"] {
+  --sh-1: none;
+  --sh-2: none;
+  --sh-header: none;
+  --sh-panel: none;
+  --sh-inset: none;
+  --sh-node-hover: var(--nodesh);
+  --sh-node-drag: var(--nodesh);
+  --sh-chip: none;
+  --sh-foot: none;
+  /* The node shadow in the exported PNG: the canvas cannot read box-shadow, so
+     the colour comes from here and the blur lives in exportPng.js. */
+  --pngsh: rgba(0, 0, 0, .45);
+}
+
+[data-theme="light"] {
+  /* Slate-blue shadows (not pure black) to match the cool --bg. */
+  --sh-1: 0 1px 2px rgba(23, 32, 50, .08);
+  --sh-2: 0 1px 2px rgba(23, 32, 50, .07), 0 3px 8px -3px rgba(23, 32, 50, .16);
+  --sh-header: 0 1px 3px rgba(23, 32, 50, .07), 0 6px 16px -10px rgba(23, 32, 50, .22);
+  --sh-panel: 3px 0 10px -6px rgba(23, 32, 50, .20);
+  --sh-inset: inset 0 1px 2px rgba(23, 32, 50, .06);
+  --sh-chip: 0 1px 2px rgba(23, 32, 50, .14);
+  --sh-foot: 0 -2px 6px -3px rgba(23, 32, 50, .14);
+  --pngsh: rgba(23, 32, 50, .18);
+  --pop: 0 4px 10px -4px rgba(23, 32, 50, .16), 0 18px 44px -12px rgba(23, 32, 50, .30);
+  --nodesh: 0 1px 2px rgba(23, 32, 50, .07), 0 6px 16px -6px rgba(23, 32, 50, .18);
+  --sh-node-hover: 0 1px 2px rgba(23, 32, 50, .08), 0 10px 24px -8px rgba(23, 32, 50, .26);
+  --sh-node-drag: 0 2px 4px rgba(23, 32, 50, .10), 0 18px 36px -10px rgba(23, 32, 50, .32);
+}

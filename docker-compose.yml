@@ -1,0 +1,109 @@
+# Postgres + API + the published frontend of the Flow Editor.
+#
+# In development the frontend runs on Vite (`npm run dev`, port 5173) and
+# reaches the API through the /api proxy in vite.config.js; the `frontend`
+# service here is the published version (a static build served by nginx under
+# /flow-editor/). See docs/DEPLOY.md.
+#
+# Ports on this host (your-host): 5432 and 5433 are taken by other
+# Postgres containers, so this one sits on 5434; the API on 8010 and the
+# frontend on 8020 -- all three published on 127.0.0.1 only. The host's own
+# nginx is what publishes the editor, at /flow-editor/ (see docs/DEPLOY.md).
+
+name: flow-editor
+
+services:
+  api:
+    build: ./backend
+    container_name: flow-api
+    restart: unless-stopped
+    environment:
+      # Data Lineage dataset tabs: read-only source; the password is a mounted file,
+      # never an environment variable (docker inspect would print it).
+      ERP_RO_PASSWORD_FILE: /run/secrets/probe_ro_pw
+      DATABASE_URL: postgresql+psycopg://flow:${FLOW_DB_PASSWORD}@postgres:5432/flows
+      DB_SCHEMA: flow
+      STORAGE_DIR: /data/files
+      # Label written to flow_versions.author when a save arrives through a
+      # share link; with an account, the user's name wins.
+      AUTHOR: ${FLOW_AUTHOR:-}
+      MAX_UPLOAD_MB: ${FLOW_MAX_UPLOAD_MB:-10}
+      # Accounts and sharing. PUBLIC_BASE_URL is the address that goes into the
+      # body of an email; SESSION_COOKIE_SECURE can only be true under HTTPS.
+      PUBLIC_BASE_URL: ${FLOW_PUBLIC_BASE_URL:-https://lineos.example.com/flow-editor/}
+      SESSION_COOKIE_SECURE: ${FLOW_SESSION_COOKIE_SECURE:-false}
+      SESSION_DAYS: ${FLOW_SESSION_DAYS:-30}
+      # SMTP is optional: with no host, "Send by email" falls back to the
+      # visitor's own mail client (mailto:) instead of failing.
+      SMTP_HOST: ${FLOW_SMTP_HOST:-}
+      SMTP_PORT: ${FLOW_SMTP_PORT:-587}
+      SMTP_USER: ${FLOW_SMTP_USER:-}
+      SMTP_PASSWORD: ${FLOW_SMTP_PASSWORD:-}
+      SMTP_STARTTLS: ${FLOW_SMTP_STARTTLS:-true}
+      SMTP_FROM: ${FLOW_SMTP_FROM:-}
+    ports:
+      - "127.0.0.1:8010:8000"
+    volumes:
+      - ${ERP_RO_PASSWORD_HOST_FILE:-./secrets/probe_ro_pw}:/run/secrets/probe_ro_pw:ro
+      - flow_files:/data/files
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - python -c "import urllib.request as u; u.urlopen('http://127.0.0.1:8000/api/health', timeout=3)"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      - flow-net
+      # Reaches warehouse-postgres by name. This gives reach to every container
+      # on airflow_default; the guard on the data is the read-only role
+      # lineage_probe_ro, not the network.
+      - airflow_default
+    deploy:
+      resources:
+        limits:
+          cpus: "0.60"
+          memory: 384M
+        reservations:
+          memory: 128M
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+    container_name: flow-frontend
+    restart: unless-stopped
+    # Loopback only: the host's nginx (your-host.local:443) is the one
+    # that reaches this port, so nothing here needs an external interface.
+    ports:
+      - "${FLOW_BIND_IP:-127.0.0.1}:8020:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      # A single network, exclusive to this project: the API is reached inside
+      # it, and the host's nginx reaches this container through 127.0.0.1:8020.
+      - flow-net
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "0.30"
+          memory: 128M
+
+volumes:
+  flow_files:
+    name: flow_files
+
+networks:
+  # Exclusive to the Flow Editor -- no other stack on the host joins it.
+  flow-net:
+    name: flow-net
+  # The Airflow stack's network: joined, never created or removed from here.
+  airflow_default:
+    external: true

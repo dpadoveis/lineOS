@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet"><style>html,body{margin:0;padding:0;background:var(--bg);font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}*{box-sizing:border-box}a{color:#e8c26a}a:hover{color:#f5d896}input,textarea{font-family:inherit}input:focus,textarea:focus{outline:none}</style><style>:root,[data-flowtheme="dark"]{--bg:#0b0d10;--panel:#101317;--card:#151a20;--head:#12161b;--field:#0f1318;--btn:#181c22;--btnh:#1f242b;--rowh:#131820;--line:#23282f;--line2:#1d2228;--line3:#1a1f25;--edge1:#2b313a;--edge2:#3a424e;--txt:#e6e8eb;--txt2:#c8cdd4;--txt3:#a4adb8;--mut:#8b939e;--mut2:#6d7681;--mut3:#5c6572;--mut4:#4d5561;--grid:#1b2027;--axis:#2f3742;--dangerbg:#2a1f22;--pop:0 14px 40px rgba(0,0,0,.6);--nodesh:0 6px 20px rgba(0,0,0,.45)}[data-flowtheme="light"]{--bg:#f3f4f6;--panel:#ffffff;--card:#ffffff;--head:#f7f8fa;--field:#f7f8fa;--btn:#f1f3f6;--btnh:#e7eaef;--rowh:#f7f8fa;--line:#e0e3e9;--line2:#eceef2;--line3:#eceef2;--edge1:#d3d8e0;--edge2:#b3bbc7;--txt:#1a1f27;--txt2:#3d4550;--txt3:#4f5866;--mut:#5f6875;--mut2:#7b8492;--mut3:#8d95a2;--mut4:#a6aeba;--grid:#d3d8e0;--axis:#b6bec9;--dangerbg:#fbe9e7;--pop:0 14px 40px rgba(20,25,35,.18);--nodesh:0 4px 14px rgba(20,25,35,.1)}html,body{background:var(--bg)}</style></helmet>
+<div style="height:100vh;display:flex;flex-direction:column;background:var(--bg);color:var(--txt);overflow:hidden">
+
+  <header style="display:flex;align-items:center;gap:10px;padding:0 14px;height:54px;flex:none;background:var(--panel);border-bottom:1px solid var(--line);position:relative;z-index:40">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:26px;height:26px;display:grid;place-items:center;background:#e8c26a;color:var(--bg);border-radius:5px;font:600 13px 'IBM Plex Mono',monospace">◇</div>
+      <div style="display:flex;flex-direction:column;gap:1px">
+        <span style="font:600 13.5px/1 'IBM Plex Sans',sans-serif;letter-spacing:-.01em">Editor de Fluxo</span>
+        <span style="font:400 10px/1 'IBM Plex Mono',monospace;color:var(--mut2);letter-spacing:.06em">PLANO CARTESIANO</span>
+      </div>
+    </div>
+
+    <div style="position:relative">
+      <button onClick="{{ toggleSave }}" style="display:flex;align-items:center;gap:7px;flex:none;white-space:nowrap;padding:7px 11px;background:var(--btn);border:1px solid var(--edge1);border-radius:6px;color:var(--txt);font:500 12px 'IBM Plex Sans',sans-serif;cursor:pointer" style-hover="background:var(--btnh);border-color:var(--edge2)">
+        <span style="font:600 11px 'IBM Plex Mono',monospace;color:#e8c26a">↓</span>Salvar<span style="color:var(--mut2);font-size:9px">▾</span>
+      </button>
+      <sc-if value="{{ saveOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;left:0;top:40px;width:236px;background:var(--card);border:1px solid var(--edge1);border-radius:8px;box-shadow:var(--pop);padding:6px;display:flex;flex-direction:column;gap:2px">
+          <button onClick="{{ savePng }}" style="display:flex;flex-direction:column;gap:2px;text-align:left;padding:9px 10px;background:transparent;border:none;border-radius:6px;cursor:pointer" style-hover="background:var(--btnh)">
+            <span style="font:500 12.5px 'IBM Plex Sans',sans-serif;color:var(--txt)">Imagem (PNG)</span>
+            <span style="font:400 10.5px 'IBM Plex Mono',monospace;color:var(--mut2)">baixa o plano renderizado</span>
+          </button>
+          <button onClick="{{ saveJson }}" style="display:flex;flex-direction:column;gap:2px;text-align:left;padding:9px 10px;background:transparent;border:none;border-radius:6px;cursor:pointer" style-hover="background:var(--btnh)">
+            <span style="font:500 12.5px 'IBM Plex Sans',sans-serif;color:var(--txt)">JSON (baixar)</span>
+            <span style="font:400 10.5px 'IBM Plex Mono',monospace;color:var(--mut2)">fluxo completo em arquivo</span>
+          </button>
+          <button onClick="{{ copyJson }}" style="display:flex;flex-direction:column;gap:2px;text-align:left;padding:9px 10px;background:transparent;border:none;border-radius:6px;cursor:pointer" style-hover="background:var(--btnh)">
+            <span style="font:500 12.5px 'IBM Plex Sans',sans-serif;color:var(--txt)">JSON (copiar)</span>
+            <span style="font:400 10.5px 'IBM Plex Mono',monospace;color:var(--mut2)">colar em outro editor de fluxo</span>
+          </button>
+        </div>
+      </sc-if>
+    </div>
+
+    <button onClick="{{ toggleBox }}" style="display:flex;align-items:center;gap:7px;flex:none;white-space:nowrap;padding:7px 11px;background:var(--btn);border:1px solid var(--edge1);border-radius:6px;color:var(--txt);font:500 12px 'IBM Plex Sans',sans-serif;cursor:pointer" style-hover="background:var(--btnh);border-color:var(--edge2)">
+      <span style="font:600 12px 'IBM Plex Mono',monospace;color:#e8c26a">⌗</span>Ferramentas
+    </button>
+
+    <div style="flex:1"></div>
+
+    <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--btn);border:1px solid var(--line);border-radius:6px;font:500 11px 'IBM Plex Mono',monospace;color:var(--mut)">
+      <span style="color:var(--mut3)">x</span><span style="color:var(--txt);min-width:40px">{{ cx }}</span>
+      <span style="color:var(--mut3)">y</span><span style="color:var(--txt);min-width:40px">{{ cy }}</span>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:2px;background:var(--btn);border:1px solid var(--line);border-radius:6px;padding:3px">
+      <button onClick="{{ zoomOut }}" style="width:26px;height:24px;background:transparent;border:none;color:var(--txt3);font:500 15px 'IBM Plex Mono',monospace;cursor:pointer;border-radius:4px" style-hover="background:#252b33;color:#fff">−</button>
+      <span style="min-width:44px;text-align:center;font:500 11px 'IBM Plex Mono',monospace;color:var(--mut)">{{ zoomPct }}%</span>
+      <button onClick="{{ zoomIn }}" style="width:26px;height:24px;background:transparent;border:none;color:var(--txt3);font:500 15px 'IBM Plex Mono',monospace;cursor:pointer;border-radius:4px" style-hover="background:#252b33;color:#fff">+</button>
+    </div>
+
+    <button onClick="{{ resetView }}" style="flex:none;white-space:nowrap;padding:7px 10px;background:transparent;border:1px solid var(--edge1);border-radius:6px;color:var(--txt3);font:500 11px 'IBM Plex Sans',sans-serif;cursor:pointer" style-hover="border-color:var(--edge2);color:var(--txt)">Centralizar</button>
+
+    <button onClick="{{ toggleTheme }}" title="Alternar claro / escuro" style="width:31px;height:31px;flex:none;display:grid;place-items:center;background:var(--btn);border:1px solid var(--edge1);border-radius:6px;color:var(--txt3);font:400 13px 'IBM Plex Mono',monospace;cursor:pointer" style-hover="border-color:var(--edge2);color:var(--txt)">{{ themeIcon }}</button>
+
+    <button onClick="{{ organize }}" title="Organizar nodes em camadas" style="display:flex;align-items:center;gap:6px;flex:none;white-space:nowrap;padding:7px 10px;background:transparent;border:1px solid var(--edge1);border-radius:6px;color:var(--txt3);font:500 11px 'IBM Plex Sans',sans-serif;cursor:pointer" style-hover="border-color:#e8c26a;color:#e8c26a">
+      <span style="font:600 11px 'IBM Plex Mono',monospace">⋮⋮</span>Organizar
+    </button>
+  </header>
+
+  <div style="flex:1;display:flex;min-height:0">
+
+    <sc-if value="{{ boxOpen }}" hint-placeholder-val="{{ true }}">
+      <aside style="width:290px;flex:none;display:flex;flex-direction:column;background:var(--panel);border-right:1px solid var(--line)">
+        <div style="padding:16px 16px 12px;display:flex;flex-direction:column;gap:12px;border-bottom:1px solid var(--line2)">
+          <div style="display:flex;align-items:baseline;justify-content:space-between">
+            <span style="font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.1em;color:var(--mut)">FERRAMENTAS</span>
+            <span style="font:400 10.5px 'IBM Plex Mono',monospace;color:var(--mut3)">{{ resultCount }} de {{ totalCount }}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:0 10px;height:36px;background:var(--bg);border:1px solid var(--edge1);border-radius:7px">
+            <span style="color:var(--mut2);font:500 12px 'IBM Plex Mono',monospace">⌕</span>
+            <input value="{{ q }}" onChange="{{ onSearch }}" placeholder="airflow, kafka, dbt…" style="flex:1;background:transparent;border:none;color:var(--txt);font:400 12.5px 'IBM Plex Sans',sans-serif" />
+            <sc-if value="{{ hasQuery }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ clearSearch }}" style="background:transparent;border:none;color:var(--mut2);font:400 13px 'IBM Plex Mono',monospace;cursor:pointer;padding:0" style-hover="color:var(--txt)">✕</button>
+            </sc-if>
+          </div>
+        </div>
+
+        <div style="flex:1;overflow-y:auto;padding:8px">
+          <sc-for list="{{ results }}" as="t" hint-placeholder-count="6">
+            <div onClick="{{ t.add }}" style="display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:7px;cursor:pointer;border:1px solid transparent" style-hover="background:var(--btn);border-color:var(--edge1)">
+              <div style="width:28px;height:28px;flex:none;display:grid;place-items:center;border-radius:6px;font:600 10px 'IBM Plex Mono',monospace;background:{{ t.dim }};color:{{ t.col }}">{{ t.k }}</div>
+              <div style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0">
+                <span style="font:500 12.5px/1.2 'IBM Plex Sans',sans-serif;color:var(--txt)">{{ t.n }}</span>
+                <span style="font:400 10px/1 'IBM Plex Mono',monospace;color:var(--mut2);letter-spacing:.04em">{{ t.c }}</span>
+              </div>
+              <span style="font:400 14px 'IBM Plex Mono',monospace;color:var(--mut4)">+</span>
+            </div>
+          </sc-for>
+          <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:26px 14px;text-align:center;display:flex;flex-direction:column;gap:6px">
+              <span style="font:500 12px 'IBM Plex Sans',sans-serif;color:var(--mut)">Nenhuma ferramenta encontrada</span>
+              <span style="font:400 11px/1.5 'IBM Plex Sans',sans-serif;color:var(--mut3)">Tente “orquestração”, “stream” ou “sql”.</span>
+            </div>
+          </sc-if>
+        </div>
+
+        <div style="padding:13px 16px;border-top:1px solid var(--line2);display:flex;flex-direction:column;gap:6px">
+          <span style="font:400 10.5px/1.5 'IBM Plex Sans',sans-serif;color:var(--mut2)">Puxe <span style="color:#e8c26a">●</span> da direita para frente, ou <span style="color:#6fb8d3">●</span> da esquerda para apontar para trás.</span>
+          <span style="font:400 10.5px/1.5 'IBM Plex Sans',sans-serif;color:var(--mut2)">Duplo clique na seta escreve um rótulo (input, output…).</span>
+          <span style="font:400 10.5px/1.5 'IBM Plex Sans',sans-serif;color:var(--mut2)">Botão direito: duplicar, copiar metadata, colar.</span>
+          <span style="font:400 10.5px/1.5 'IBM Plex Sans',sans-serif;color:var(--mut2)">Ctrl+C / Ctrl+V copiam e colam nodes.</span>
+        </div>
+      </aside>
+    </sc-if>
+
+    <div data-vp="1" onMouseDown="{{ onDown }}" onMouseMove="{{ onMove }}" onMouseUp="{{ onUp }}" onMouseLeave="{{ onUp }}" onWheel="{{ onWheel }}" onContextMenu="{{ onCanvasMenu }}" style="flex:1;position:relative;overflow:hidden;background-color:var(--bg);background-image:radial-gradient(circle, var(--grid) 1px, transparent 1px);background-size:24px 24px;background-position:0 0">
+
+      <div data-layer="1" style="position:absolute;left:0;top:0;width:0;height:0;transform-origin:0 0">
+
+        <div style="position:absolute;left:-6000px;top:-1px;width:12000px;height:1px;background:var(--axis)"></div>
+        <div style="position:absolute;left:-1px;top:-6000px;width:1px;height:12000px;background:var(--axis)"></div>
+        <div style="position:absolute;left:8px;top:8px;font:500 10px 'IBM Plex Mono',monospace;color:var(--mut4)">0,0</div>
+        <div style="position:absolute;left:520px;top:8px;font:500 10px 'IBM Plex Mono',monospace;color:var(--mut4)">+x</div>
+        <div style="position:absolute;left:8px;top:-320px;font:500 10px 'IBM Plex Mono',monospace;color:var(--mut4)">+y</div>
+
+        {{ edgeLayer }}
+
+        <sc-for list="{{ edgeLabels }}" as="l" hint-placeholder-count="0">
+          <div style="position:absolute;left:{{ l.x }}px;top:{{ l.y }}px;transform:translate(-50%,-50%)">
+            <input data-elabel="{{ l.id }}" value="{{ l.value }}" onChange="{{ l.onChange }}" onBlur="{{ l.onBlur }}" onMouseDown="{{ stop }}" onDoubleClick="{{ stop }}" placeholder="input / output" style="width:104px;text-align:center;padding:4px 6px;background:var(--card);border:1px solid {{ l.stroke }};border-radius:5px;color:var(--txt);font:500 10.5px 'IBM Plex Mono',monospace" />
+          </div>
+        </sc-for>
+
+        <sc-for list="{{ nodes }}" as="n" hint-placeholder-count="3">
+          <div data-node="{{ n.id }}" onMouseDown="{{ n.onDown }}" onMouseEnter="{{ n.onEnter }}" onMouseLeave="{{ n.onLeave }}" onContextMenu="{{ n.onMenu }}" style="position:absolute;left:{{ n.x }}px;top:{{ n.y }}px;width:232px;background:var(--card);border:1px solid {{ n.stroke }};border-radius:9px;box-shadow:{{ n.shadow }};cursor:grab;user-select:none">
+            <div style="display:flex;align-items:center;gap:10px;padding:11px 12px">
+              <div style="width:30px;height:30px;flex:none;display:grid;place-items:center;border-radius:7px;font:600 10.5px 'IBM Plex Mono',monospace;background:{{ n.dim }};color:{{ n.col }}">{{ n.k }}</div>
+              <div style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0">
+                <span style="font:500 13px/1.2 'IBM Plex Sans',sans-serif;color:var(--txt)">{{ n.n }}</span>
+                <span style="font:400 9.5px/1 'IBM Plex Mono',monospace;color:var(--mut2);letter-spacing:.05em">{{ n.c }}</span>
+              </div>
+              <button onMouseDown="{{ n.toggleDesc }}" title="Descrição" style="width:22px;height:22px;flex:none;display:grid;place-items:center;background:transparent;border:1px solid var(--edge1);border-radius:5px;color:{{ n.descColor }};font:400 10px 'IBM Plex Mono',monospace;cursor:pointer" style-hover="border-color:var(--edge2);color:var(--txt)">≡</button>
+            </div>
+
+            <sc-if value="{{ n.hasDesc }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:0 12px 10px">
+                <textarea value="{{ n.desc }}" onChange="{{ n.onDesc }}" onMouseDown="{{ stop }}" placeholder="Descreva o que este passo faz…" rows="2" style="width:100%;resize:vertical;padding:7px 8px;background:var(--field);border:1px solid var(--edge1);border-radius:6px;color:var(--txt2);font:400 11.5px/1.45 'IBM Plex Sans',sans-serif"></textarea>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ n.metaVisible }}" hint-placeholder-val="{{ false }}">
+              <div style="margin:0 12px 10px;border:1px solid var(--line);border-radius:6px;overflow:hidden">
+                <div style="display:grid;grid-template-columns:80px 1fr 22px;align-items:center;background:var(--head);border-bottom:1px solid var(--line);padding:5px 0 5px 8px">
+                  <span style="font:600 8.5px 'IBM Plex Mono',monospace;color:var(--mut3);letter-spacing:.12em">CHAVE</span>
+                  <span style="font:600 8.5px 'IBM Plex Mono',monospace;color:var(--mut3);letter-spacing:.12em">VALOR</span>
+                  <span></span>
+                </div>
+                <sc-for list="{{ n.meta }}" as="m" hint-placeholder-count="1">
+                  <div style="display:grid;grid-template-columns:80px 1fr 22px;align-items:center;border-top:1px solid var(--line3);background:var(--field)" style-hover="background:var(--rowh)">
+                    <input value="{{ m.k }}" onChange="{{ m.onKey }}" onMouseDown="{{ stop }}" placeholder="chave" style="width:100%;padding:6px 6px 6px 8px;background:transparent;border:none;border-right:1px solid var(--line3);color:var(--mut);font:500 10.5px 'IBM Plex Mono',monospace" />
+                    <input value="{{ m.v }}" onChange="{{ m.onVal }}" onMouseDown="{{ stop }}" placeholder="valor" style="width:100%;min-width:0;padding:6px 8px;background:transparent;border:none;color:var(--txt);font:400 10.5px 'IBM Plex Mono',monospace" />
+                    <button onMouseDown="{{ m.remove }}" title="Remover" style="width:22px;height:24px;background:transparent;border:none;color:var(--mut4);font:400 10px 'IBM Plex Mono',monospace;cursor:pointer" style-hover="color:#e07a6a">✕</button>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px 6px 10px;border-top:1px solid var(--line2)">
+              <button onMouseDown="{{ n.toggleMeta }}" title="Expandir / contrair metadados" style="display:flex;align-items:center;gap:6px;padding:3px 6px;background:transparent;border:none;border-radius:5px;color:{{ n.metaColor }};font:500 9.5px 'IBM Plex Mono',monospace;cursor:pointer" style-hover="background:var(--btnh);color:var(--txt)">
+                <span style="display:inline-block;width:9px;text-align:center;font-size:9px">{{ n.caret }}</span>{{ n.metaCount }}
+              </button>
+              <span style="flex:1;text-align:center;font:400 9.5px 'IBM Plex Mono',monospace;color:var(--mut4)">({{ n.cxy }})</span>
+              <button onMouseDown="{{ n.addMeta }}" title="Adicionar metadata" style="width:24px;height:24px;flex:none;display:grid;place-items:center;background:var(--btn);border:1px solid var(--edge1);border-radius:6px;color:var(--txt3);font:400 13px 'IBM Plex Mono',monospace;line-height:1;cursor:pointer" style-hover="border-color:#e8c26a;color:#e8c26a;background:var(--btnh)">+</button>
+            </div>
+
+            <div onMouseDown="{{ n.startBack }}" title="Apontar para trás" style="position:absolute;left:-7px;top:20px;width:14px;height:14px;border-radius:50%;background:#6fb8d3;border:2px solid var(--bg);cursor:crosshair" style-hover="background:#96d2e6"></div>
+            <div onMouseDown="{{ n.startLink }}" title="Apontar para frente" style="position:absolute;right:-7px;top:20px;width:14px;height:14px;border-radius:50%;background:#e8c26a;border:2px solid var(--bg);cursor:crosshair" style-hover="background:#f5d896"></div>
+          </div>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;inset:0;display:grid;place-items:center;pointer-events:none">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+            <span style="font:500 13px 'IBM Plex Sans',sans-serif;color:var(--mut2)">Plano vazio</span>
+            <span style="font:400 11.5px 'IBM Plex Sans',sans-serif;color:var(--mut4)">Abra a caixa de ferramentas e pesquise por “airflow”.</span>
+          </div>
+        </div>
+      </sc-if>
+
+      <div style="position:absolute;left:14px;bottom:12px;display:flex;gap:14px;font:400 10.5px 'IBM Plex Mono',monospace;color:var(--mut4);pointer-events:none">
+        <span>{{ nodeCount }} nodes</span><span>{{ edgeCount }} conexões</span><span style="color:var(--mut)">{{ statusMsg }}</span>
+      </div>
+    </div>
+  </div>
+
+  <sc-if value="{{ hasMenu }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;left:{{ menuX }}px;top:{{ menuY }}px;z-index:60;width:212px;background:var(--card);border:1px solid var(--edge1);border-radius:8px;box-shadow:var(--pop);padding:5px;display:flex;flex-direction:column;gap:1px">
+      <sc-for list="{{ menuItems }}" as="mi" hint-placeholder-count="3">
+        <button onClick="{{ mi.act }}" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 9px;background:transparent;border:none;border-radius:6px;cursor:pointer;text-align:left" style-hover="background:var(--btnh)">
+          <span style="font:500 12px 'IBM Plex Sans',sans-serif;color:{{ mi.col }}">{{ mi.label }}</span>
+          <span style="font:400 10px 'IBM Plex Mono',monospace;color:var(--mut3)">{{ mi.hint }}</span>
+        </button>
+      </sc-for>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#e8c26a&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#e8c26a&quot;,&quot;#6fd3c7&quot;,&quot;#a78bd8&quot;,&quot;#e0708a&quot;]},&quot;edgeStyle&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;curva&quot;,&quot;options&quot;:[&quot;curva&quot;,&quot;reta&quot;],&quot;tsType&quot;:&quot;string&quot;},&quot;snapToGrid&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  get W() { return 232; }
+  vp() { return document.querySelector('[data-vp]'); }
+  layer() { const v = this.vp(); return document.querySelector('[data-layer]') || (v && v.firstElementChild); }
+  nextId(list) { return list.reduce((m, i) => Math.max(m, i.id), 0) + 1; }
+
+  get tools() { return [
+    { n: 'Airflow', c: 'ORQUESTRAÇÃO', k: 'AF', col: '#7dd3a0', tags: 'dag scheduler apache orquestracao' },
+    { n: 'Dagster', c: 'ORQUESTRAÇÃO', k: 'DG', col: '#7dd3a0', tags: 'asset pipeline orquestracao' },
+    { n: 'Prefect', c: 'ORQUESTRAÇÃO', k: 'PF', col: '#7dd3a0', tags: 'flow orquestracao' },
+    { n: 'dbt', c: 'TRANSFORMAÇÃO', k: 'DBT', col: '#e8956a', tags: 'sql modelo transformacao' },
+    { n: 'Spark', c: 'PROCESSAMENTO', k: 'SP', col: '#e8956a', tags: 'batch cluster processamento' },
+    { n: 'Kafka', c: 'STREAM', k: 'KF', col: '#a78bd8', tags: 'stream topico evento fila' },
+    { n: 'Flink', c: 'STREAM', k: 'FL', col: '#a78bd8', tags: 'stream tempo real' },
+    { n: 'Fivetran', c: 'INGESTÃO', k: 'FT', col: '#6fb8d3', tags: 'elt conector ingestao' },
+    { n: 'Webhook', c: 'INGESTÃO', k: 'WH', col: '#6fb8d3', tags: 'http gatilho ingestao api' },
+    { n: 'Snowflake', c: 'ARMAZENAMENTO', k: 'SN', col: '#6fd3c7', tags: 'warehouse sql armazenamento' },
+    { n: 'BigQuery', c: 'ARMAZENAMENTO', k: 'BQ', col: '#6fd3c7', tags: 'warehouse sql armazenamento' },
+    { n: 'PostgreSQL', c: 'BANCO', k: 'PG', col: '#6fd3c7', tags: 'sql relacional banco' },
+    { n: 'S3', c: 'ARMAZENAMENTO', k: 'S3', col: '#6fd3c7', tags: 'objeto lake armazenamento' },
+    { n: 'Redis', c: 'CACHE', k: 'RD', col: '#e0708a', tags: 'cache memoria chave' },
+    { n: 'Great Expectations', c: 'QUALIDADE', k: 'GE', col: '#e8c26a', tags: 'teste validacao qualidade' },
+    { n: 'Looker', c: 'VISUALIZAÇÃO', k: 'LK', col: '#c9a0dc', tags: 'bi dashboard visualizacao' },
+    { n: 'Metabase', c: 'VISUALIZAÇÃO', k: 'MB', col: '#c9a0dc', tags: 'bi dashboard visualizacao' },
+    { n: 'Script Python', c: 'CUSTOM', k: 'PY', col: '#9aa4b0', tags: 'codigo custom script' }
+  ]; }
+
+  state = {
+    q: '',
+    boxOpen: true,
+    saveOpen: false,
+    nodes: [
+      { id: 1, n: 'Airflow', c: 'ORQUESTRAÇÃO', k: 'AF', col: '#7dd3a0', x: -432, y: -24, desc: null, meta: [] },
+      { id: 2, n: 'dbt', c: 'TRANSFORMAÇÃO', k: 'DBT', col: '#e8956a', x: -120, y: -192, desc: null, meta: [{ k: 'modelo', v: 'staging.pedidos' }] },
+      { id: 3, n: 'Snowflake', c: 'ARMAZENAMENTO', k: 'SN', col: '#6fd3c7', x: 192, y: -24, desc: null, meta: [] }
+    ],
+    edges: [ { id: 1, from: 1, to: 2, label: 'trigger' }, { id: 2, from: 2, to: 3, label: null } ],
+    pan: { x: 700, y: 400 },
+    scale: 1,
+    cursor: { x: 0, y: 0 },
+    h: {},
+    drag: null,
+    panning: null,
+    link: null,
+    hover: null,
+    sel: null,
+    menu: null,
+    clip: null,
+    theme: 'dark',
+    status: ''
+  };
+
+  componentDidMount() {
+    let t = null;
+    try { t = localStorage.getItem('flow-theme'); } catch (err) { t = null; }
+    if (t === 'light' || t === 'dark') this.setState({ theme: t });
+    this.center();
+    this.applyView();
+    window.addEventListener('keydown', this.onKey);
+  }
+  componentWillUnmount() { window.removeEventListener('keydown', this.onKey); }
+  componentDidUpdate() { this.applyView(); }
+
+  applyView() {
+    const { pan, scale, panning, link, theme } = this.state;
+    document.documentElement.setAttribute('data-flowtheme', theme || 'dark');
+    const v = this.vp();
+    const l = this.layer();
+    if (l) l.style.transform = 'translate(' + pan.x + 'px, ' + pan.y + 'px) scale(' + scale + ')';
+    if (v) {
+      v.style.backgroundSize = (24 * scale) + 'px ' + (24 * scale) + 'px';
+      v.style.backgroundPosition = pan.x + 'px ' + pan.y + 'px';
+      v.style.cursor = panning ? 'grabbing' : (link ? 'crosshair' : 'default');
+    }
+    const hs = {}; let changed = false;
+    document.querySelectorAll('[data-node]').forEach(el => {
+      const id = Number(el.dataset.node), oh = el.offsetHeight;
+      hs[id] = oh;
+      if (this.state.h[id] !== oh) changed = true;
+    });
+    if (changed && Object.keys(hs).length) this.setState({ h: hs });
+  }
+
+  nh(n) {
+    if (this.state.h[n.id]) return this.state.h[n.id];
+    const rows = (n.meta || []).length;
+    return 90 + (n.desc !== null && n.desc !== undefined ? 62 : 0) + (rows && n.metaOpen !== false ? 32 + rows * 26 : 0);
+  }
+  center = () => {
+    const el = this.vp(); if (!el) return;
+    const r = el.getBoundingClientRect();
+    const ns = Math.min(1, Math.max(0.4, this.fitScale(r)));
+    this.setState({ pan: { x: Math.round(r.width * 0.5), y: Math.round(r.height * 0.5) }, scale: ns }, () => this.applyView());
+  };
+  fitScale(r) {
+    const ns = this.state.nodes;
+    if (!ns.length) return 1;
+    const ext = ns.reduce((a, n) => ({
+      x: Math.max(a.x, Math.abs(n.x), Math.abs(n.x + this.W)),
+      y: Math.max(a.y, Math.abs(n.y), Math.abs(n.y + this.nh(n)))
+    }), { x: 1, y: 1 });
+    return Math.min((r.width / 2 - 30) / ext.x, (r.height / 2 - 30) / ext.y);
+  }
+
+  organize = () => {
+    const nodes = this.state.nodes;
+    if (!nodes.length) return;
+    const has = {}; nodes.forEach(n => has[n.id] = true);
+    const edges = this.state.edges.filter(e => has[e.from] && has[e.to]);
+
+    const layer = {}; nodes.forEach(n => layer[n.id] = 0);
+    for (let p = 0; p < nodes.length + 1; p++) {
+      let moved = false;
+      edges.forEach(e => { if (layer[e.to] < layer[e.from] + 1 && layer[e.from] + 1 <= nodes.length) { layer[e.to] = layer[e.from] + 1; moved = true; } });
+      if (!moved) break;
+    }
+
+    // items per layer: real nodes + dummy slots reserving room for long edges
+    const cols = {};
+    const push = (L, it) => { (cols[L] = cols[L] || []).push(it); };
+    nodes.forEach(n => push(layer[n.id], { key: 'n' + n.id, node: n, h: this.nh(n), y0: n.y }));
+    const adj = {};
+    const link = (a, b) => { (adj[a] = adj[a] || []).push(b); (adj[b] = adj[b] || []).push(a); };
+    edges.forEach(e => {
+      const a = layer[e.from], b = layer[e.to];
+      const lo = Math.min(a, b), hi = Math.max(a, b);
+      let prev = 'n' + (a < b ? e.from : e.to);
+      for (let L = lo + 1; L < hi; L++) {
+        const key = 'd' + e.id + '_' + L;
+        push(L, { key, h: 34, y0: (nodes.find(n => n.id === e.from).y + nodes.find(n => n.id === e.to).y) / 2 });
+        link(prev, key); prev = key;
+      }
+      link(prev, 'n' + (a < b ? e.to : e.from));
+    });
+
+    const keys = Object.keys(cols).map(Number).sort((x, y) => x - y);
+    keys.forEach(L => cols[L].sort((a, b) => a.y0 - b.y0));
+    const pos = {};
+    const reindex = () => keys.forEach(L => cols[L].forEach((it, i) => pos[it.key] = i));
+    reindex();
+    for (let pass = 0; pass < 4; pass++) {
+      const seq = pass % 2 ? keys.slice().reverse() : keys;
+      seq.forEach(L => {
+        cols[L].forEach(it => {
+          const ns = (adj[it.key] || []).map(k => pos[k]).filter(v => v !== undefined);
+          it.bary = ns.length ? ns.reduce((a, b) => a + b, 0) / ns.length : pos[it.key];
+        });
+        cols[L].sort((a, b) => a.bary - b.bary);
+        reindex();
+      });
+    }
+
+    const gapX = 150, gapY = 52;
+    const colW = this.W + gapX;
+    const offX = -((keys.length - 1) * colW) / 2;
+    const placed = {};
+    keys.forEach((L, ci) => {
+      const col = cols[L];
+      const total = col.reduce((s, it) => s + it.h + gapY, -gapY);
+      let y = -total / 2;
+      col.forEach(it => {
+        if (it.node) placed[it.node.id] = { x: this.snap(offX + ci * colW), y: this.snap(y) };
+        y += it.h + gapY;
+      });
+    });
+
+    this.setState({
+      nodes: nodes.map(n => placed[n.id] ? Object.assign({}, n, placed[n.id]) : n),
+      status: 'organizado em ' + keys.length + ' camadas, sem sobreposição'
+    }, () => this.center());
+  };
+
+  onKey = (e) => {
+    const t = e.target || {};
+    if (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA') return;
+    const k = (e.key || '').toLowerCase();
+    if (e.ctrlKey || e.metaKey) {
+      if (k === 'c') { this.copySelected(); e.preventDefault(); }
+      if (k === 'v') { this.pasteNode(); e.preventDefault(); }
+      if (k === 'd') { const s = this.state.sel; if (s && s.type === 'node') { this.duplicate(s.id); e.preventDefault(); } }
+      return;
+    }
+    if (k === 'escape') this.setState({ menu: null, saveOpen: false, link: null });
+    if (k === 'delete' || k === 'backspace') {
+      const s = this.state.sel;
+      if (s && s.type === 'node') this.removeNode(s.id);
+      else if (s && s.type === 'edge') this.removeEdge(s.id);
+    }
+  };
+
+  toWorld = (e) => {
+    const el = this.vp();
+    if (!el) return { x: 0, y: 0 };
+    const r = el.getBoundingClientRect();
+    const { pan, scale } = this.state;
+    return { x: (e.clientX - r.left - pan.x) / scale, y: (e.clientY - r.top - pan.y) / scale };
+  };
+  snap = (v) => (this.props.snapToGrid === false ? Math.round(v) : Math.round(v / 24) * 24);
+
+  addTool = (t) => {
+    const el = this.vp();
+    const r = el ? el.getBoundingClientRect() : { width: 900, height: 600 };
+    const { pan, scale } = this.state;
+    const j = (this.state.nodes.length % 5) * 34;
+    const x = this.snap((r.width * 0.55 - pan.x) / scale - this.W / 2 + j);
+    const y = this.snap((r.height * 0.5 - pan.y) / scale - 48 + j);
+    const id = this.nextId(this.state.nodes);
+    this.setState(s => ({ nodes: s.nodes.concat([{ id, n: t.n, c: t.c, k: t.k, col: t.col, x, y, desc: null, meta: [] }]), sel: { type: 'node', id }, status: t.n + ' adicionado' }));
+  };
+
+  patch = (id, fields) => this.setState(s => ({ nodes: s.nodes.map(n => n.id === id ? Object.assign({}, n, fields) : n) }));
+  removeNode = (id) => this.setState(s => ({ nodes: s.nodes.filter(n => n.id !== id), edges: s.edges.filter(e => e.from !== id && e.to !== id), sel: null, menu: null, status: 'node removido' }));
+  editEdge = (id) => {
+    this.setState(s => ({
+      edges: s.edges.map(x => x.id === id ? Object.assign({}, x, { label: x.label === null || x.label === undefined ? '' : x.label }) : x),
+      sel: { type: 'edge', id }, menu: null, status: 'descreva a seta (input, output…)'
+    }), () => setTimeout(() => { const el = document.querySelector('[data-elabel="' + id + '"]'); if (el) { el.focus(); el.select(); } }, 30));
+  };
+  removeEdge = (id) => this.setState(s => ({ edges: s.edges.filter(e => e.id !== id), sel: null, status: 'conexão removida' }));
+
+  duplicate = (id) => {
+    const src = this.state.nodes.find(n => n.id === id); if (!src) return;
+    const nid = this.nextId(this.state.nodes);
+    const copy = JSON.parse(JSON.stringify(src));
+    copy.id = nid; copy.x = this.snap(src.x + 48); copy.y = this.snap(src.y + 48);
+    this.setState(s => ({ nodes: s.nodes.concat([copy]), sel: { type: 'node', id: nid }, menu: null, status: 'node duplicado' }));
+  };
+
+  nodePayload(n) {
+    return { kind: 'flow-node', version: 1, node: { name: n.n, category: n.c, initials: n.k, color: n.col, x: Math.round(n.x), y: Math.round(-n.y), description: n.desc || null, metadata: (n.meta || []).reduce((a, m) => { if (m.k) a[m.k] = m.v; return a; }, {}) } };
+  }
+  write(text, msg) {
+    this.setState({ clip: text, menu: null, saveOpen: false, status: msg });
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).catch(() => this.setState({ status: 'copiado internamente (clipboard bloqueado)' }));
+  }
+  copyMeta = (id) => {
+    const n = this.state.nodes.find(x => x.id === id); if (!n) return;
+    this.write(JSON.stringify(this.nodePayload(n), null, 2), 'metadata de ' + n.n + ' copiada');
+  };
+  copySelected = () => {
+    const s = this.state.sel;
+    if (!s || s.type !== 'node') { this.setState({ status: 'selecione um node para copiar' }); return; }
+    this.copyMeta(s.id);
+  };
+  addFromPayload(p, at) {
+    const d = p && p.node; if (!d) return false;
+    const id = this.nextId(this.state.nodes);
+    const meta = Object.keys(d.metadata || {}).map(k => ({ k, v: String(d.metadata[k]) }));
+    const node = { id, n: d.name || 'Node', c: d.category || 'CUSTOM', k: d.initials || 'ND', col: d.color || '#9aa4b0', x: this.snap(at ? at.x : (d.x || 0) + 48), y: this.snap(at ? at.y : -(d.y || 0) + 48), desc: d.description || null, meta };
+    this.setState(s => ({ nodes: s.nodes.concat([node]), sel: { type: 'node', id }, menu: null, status: node.n + ' colado' }));
+    return true;
+  }
+  pasteNode = (at) => {
+    const local = this.state.clip;
+    const tryText = (txt) => { try { return this.addFromPayload(JSON.parse(txt), at); } catch (err) { return false; } };
+    if (navigator.clipboard && navigator.clipboard.readText) {
+      navigator.clipboard.readText().then(txt => { if (!tryText(txt) && local) tryText(local); }).catch(() => { if (local) tryText(local); else this.setState({ status: 'nada para colar' }); });
+    } else if (local) tryText(local);
+    else this.setState({ status: 'nada para colar' });
+  };
+
+  flowPayload() {
+    return {
+      kind: 'flow-graph', version: 1,
+      nodes: this.state.nodes.map(n => Object.assign({ id: n.id }, this.nodePayload(n).node)),
+      edges: this.state.edges.map(e => ({ id: e.id, from: e.from, to: e.to, label: e.label || null }))
+    };
+  }
+  download(blob, name) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 400);
+  }
+  saveJson = () => {
+    this.download(new Blob([JSON.stringify(this.flowPayload(), null, 2)], { type: 'application/json' }), 'fluxo.json');
+    this.setState({ saveOpen: false, status: 'fluxo.json baixado' });
+  };
+  copyJson = () => this.write(JSON.stringify(this.flowPayload(), null, 2), 'fluxo copiado como JSON');
+
+  savePng = () => {
+    const nodes = this.state.nodes, edges = this.state.edges, accent = this.inkAccent();
+    const cs = getComputedStyle(document.documentElement);
+    const T = (k) => (cs.getPropertyValue('--' + k) || '').trim() || '#000';
+    if (!nodes.length) { this.setState({ saveOpen: false, status: 'nada para exportar' }); return; }
+    const pad = 70;
+    const minX = Math.min.apply(null, nodes.map(n => n.x)) - pad;
+    const minY = Math.min.apply(null, nodes.map(n => n.y)) - pad;
+    const maxX = Math.max.apply(null, nodes.map(n => n.x + this.W)) + pad;
+    const maxY = Math.max.apply(null, nodes.map(n => n.y + this.nh(n))) + pad;
+    const w = Math.max(400, maxX - minX), hgt = Math.max(300, maxY - minY), dpr = 2;
+    const cv = document.createElement('canvas');
+    cv.width = w * dpr; cv.height = hgt * dpr;
+    const c = cv.getContext('2d');
+    c.scale(dpr, dpr);
+    c.fillStyle = T('bg'); c.fillRect(0, 0, w, hgt);
+    c.translate(-minX, -minY);
+    c.fillStyle = T('grid');
+    for (let gx = Math.ceil(minX / 24) * 24; gx < maxX; gx += 24)
+      for (let gy = Math.ceil(minY / 24) * 24; gy < maxY; gy += 24) { c.beginPath(); c.arc(gx, gy, 1, 0, 6.284); c.fill(); }
+    c.strokeStyle = T('axis'); c.lineWidth = 1;
+    c.beginPath(); c.moveTo(minX, 0); c.lineTo(maxX, 0); c.moveTo(0, minY); c.lineTo(0, maxY); c.stroke();
+    const byId = {}; nodes.forEach(n => byId[n.id] = n);
+    edges.forEach(e => {
+      const a = byId[e.from], b = byId[e.to]; if (!a || !b) return;
+      const ca = { x: a.x + this.W / 2, y: a.y + this.nh(a) / 2 }, cb = { x: b.x + this.W / 2, y: b.y + this.nh(b) / 2 };
+      const s = this.clip(ca, cb, this.nh(a)), t = this.clip(cb, ca, this.nh(b));
+      c.strokeStyle = accent; c.lineWidth = 1.7;
+      c.beginPath(); c.moveTo(s.x, s.y); c.lineTo(t.x, t.y); c.stroke();
+      const ang = Math.atan2(t.y - s.y, t.x - s.x);
+      c.fillStyle = accent; c.beginPath();
+      c.moveTo(t.x, t.y);
+      c.lineTo(t.x - 11 * Math.cos(ang - 0.4), t.y - 11 * Math.sin(ang - 0.4));
+      c.lineTo(t.x - 11 * Math.cos(ang + 0.4), t.y - 11 * Math.sin(ang + 0.4));
+      c.closePath(); c.fill();
+      if (e.label) {
+        const mx = (s.x + t.x) / 2, my = (s.y + t.y) / 2;
+        c.font = '500 11px monospace';
+        const tw = c.measureText(e.label).width + 14;
+        c.fillStyle = T('card'); c.fillRect(mx - tw / 2, my - 11, tw, 22);
+        c.strokeStyle = T('edge1'); c.lineWidth = 1; c.strokeRect(mx - tw / 2, my - 11, tw, 22);
+        c.fillStyle = T('txt'); c.textAlign = 'center'; c.textBaseline = 'middle';
+        c.fillText(e.label, mx, my);
+      }
+    });
+    nodes.forEach(n => {
+      const nh = this.nh(n);
+      c.fillStyle = T('card'); c.strokeStyle = T('edge1'); c.lineWidth = 1;
+      if (c.roundRect) { c.beginPath(); c.roundRect(n.x, n.y, this.W, nh, 9); c.fill(); c.stroke(); }
+      else { c.fillRect(n.x, n.y, this.W, nh); c.strokeRect(n.x, n.y, this.W, nh); }
+      c.fillStyle = n.col + '2a';
+      if (c.roundRect) { c.beginPath(); c.roundRect(n.x + 12, n.y + 11, 30, 30, 7); c.fill(); } else c.fillRect(n.x + 12, n.y + 11, 30, 30);
+      c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.fillStyle = n.col; c.font = '600 11px monospace'; c.fillText(n.k, n.x + 27, n.y + 27);
+      c.textAlign = 'left';
+      c.fillStyle = T('txt'); c.font = '500 13px sans-serif'; c.fillText(n.n, n.x + 52, n.y + 21);
+      c.fillStyle = T('mut2'); c.font = '400 9.5px monospace'; c.fillText(n.c, n.x + 52, n.y + 36);
+      let y = n.y + 62;
+      if (n.desc) { c.fillStyle = T('txt2'); c.font = '400 11px sans-serif'; c.fillText(String(n.desc).slice(0, 34), n.x + 12, y); y += 20; }
+      (n.meta || []).forEach(m => { c.fillStyle = T('mut'); c.font = '500 10px monospace'; c.fillText((m.k || '—') + ': ' + (m.v || ''), n.x + 12, y); y += 16; });
+      c.fillStyle = T('mut3'); c.font = '400 9.5px monospace';
+      c.fillText('(' + Math.round(n.x + this.W / 2) + ', ' + Math.round(-(n.y + nh / 2)) + ')', n.x + 12, n.y + nh - 14);
+    });
+    cv.toBlob(b => this.download(b, 'fluxo.png'));
+    this.setState({ saveOpen: false, status: 'fluxo.png baixado' });
+  };
+
+  onDown = (e) => {
+    if (e.button !== 0) { this.setState({ menu: null }); return; }
+    this.setState({ panning: { sx: e.clientX, sy: e.clientY, px: this.state.pan.x, py: this.state.pan.y }, sel: null, menu: null, saveOpen: false });
+  };
+  onCanvasMenu = (e) => {
+    e.preventDefault();
+    const w = this.toWorld(e);
+    this.setState({ menu: { x: e.clientX, y: e.clientY, type: 'canvas', at: { x: w.x, y: w.y } } });
+  };
+  onMove = (e) => {
+    const w = this.toWorld(e);
+    const st = { cursor: { x: Math.round(w.x), y: Math.round(-w.y) } };
+    const { drag, panning, link } = this.state;
+    if (drag) st.nodes = this.state.nodes.map(n => n.id === drag.id ? Object.assign({}, n, { x: this.snap(w.x - drag.dx), y: this.snap(w.y - drag.dy) }) : n);
+    else if (panning) st.pan = { x: panning.px + (e.clientX - panning.sx), y: panning.py + (e.clientY - panning.sy) };
+    else if (link) st.link = Object.assign({}, link, { x: w.x, y: w.y });
+    this.setState(st);
+  };
+  onUp = () => {
+    const { link, hover } = this.state;
+    if (link && hover && hover !== link.from) {
+      const from = link.mode === 'back' ? hover : link.from;
+      const to = link.mode === 'back' ? link.from : hover;
+      const exists = this.state.edges.some(x => x.from === from && x.to === to);
+      if (!exists) this.setState(s => ({ edges: s.edges.concat([{ id: this.nextId(s.edges), from, to, label: null }]), status: 'seta criada' }));
+    } else if (link) this.setState({ status: 'solte a seta sobre outro node' });
+    this.setState({ drag: null, panning: null, link: null });
+  };
+  onWheel = (e) => {
+    const el = this.vp(); if (!el) return;
+    const f = e.deltaY < 0 ? 1.1 : 1 / 1.1;
+    const ns = Math.min(2.2, Math.max(0.35, this.state.scale * f));
+    const r = el.getBoundingClientRect();
+    const mx = e.clientX - r.left, my = e.clientY - r.top;
+    const { pan, scale } = this.state;
+    this.setState({ scale: ns, pan: { x: mx - (mx - pan.x) * (ns / scale), y: my - (my - pan.y) * (ns / scale) } });
+  };
+  zoomTo = (ns) => {
+    const el = this.vp(); if (!el) return;
+    const r = el.getBoundingClientRect();
+    const mx = r.width / 2, my = r.height / 2;
+    const { pan, scale } = this.state;
+    const s2 = Math.min(2.2, Math.max(0.35, ns));
+    this.setState({ scale: s2, pan: { x: mx - (mx - pan.x) * (s2 / scale), y: my - (my - pan.y) * (s2 / scale) } });
+  };
+
+  clip(a, b, hgt) {
+    const dx = b.x - a.x, dy = b.y - a.y;
+    if (!dx && !dy) return a;
+    const hw = this.W / 2 + 9, hh = hgt / 2 + 9;
+    const tx = dx ? hw / Math.abs(dx) : Infinity;
+    const ty = dy ? hh / Math.abs(dy) : Infinity;
+    const t = Math.min(tx, ty, 1);
+    return { x: a.x + dx * t, y: a.y + dy * t };
+  }
+  ctrl(s, t) {
+    const dx = t.x - s.x;
+    const c = Math.max(60, Math.abs(dx) * 0.45) * (dx < 0 ? -1 : 1);
+    return [{ x: s.x + c, y: s.y }, { x: t.x - c, y: t.y }];
+  }
+  pathFor(s, t) {
+    if ((this.props.edgeStyle || 'curva') === 'reta') return 'M' + s.x + ',' + s.y + ' L' + t.x + ',' + t.y;
+    const c = this.ctrl(s, t);
+    return 'M' + s.x + ',' + s.y + ' C' + c[0].x + ',' + c[0].y + ' ' + c[1].x + ',' + c[1].y + ' ' + t.x + ',' + t.y;
+  }
+  mid(s, t) {
+    if ((this.props.edgeStyle || 'curva') === 'reta') return { x: (s.x + t.x) / 2, y: (s.y + t.y) / 2 };
+    const c = this.ctrl(s, t);
+    return { x: (s.x + 3 * c[0].x + 3 * c[1].x + t.x) / 8, y: (s.y + 3 * c[0].y + 3 * c[1].y + t.y) / 8 };
+  }
+
+  shade(hex, f) {
+    const n = parseInt(String(hex).replace('#', ''), 16);
+    const r = Math.round(((n >> 16) & 255) * f), g = Math.round(((n >> 8) & 255) * f), b = Math.round((n & 255) * f);
+    return '#' + [r, g, b].map(v => Math.max(0, Math.min(255, v)).toString(16).padStart(2, '0')).join('');
+  }
+  get light() { return this.state.theme === 'light'; }
+  inkAccent() { const a = this.props.accent || '#e8c26a'; return this.light ? this.shade(a, 0.62) : a; }
+  toggleTheme = () => {
+    const t = this.light ? 'dark' : 'light';
+    try { localStorage.setItem('flow-theme', t); } catch (err) {}
+    this.setState({ theme: t, menu: null, saveOpen: false, status: t === 'light' ? 'tema claro' : 'tema escuro' });
+  };
+
+  renderVals() {
+    const h = React.createElement;
+    const accent = this.inkAccent();
+    const { nodes, edges, q, link, hover, sel, menu } = this.state;
+    const byId = {}; nodes.forEach(n => byId[n.id] = n);
+    const ctr = n => ({ x: n.x + this.W / 2, y: n.y + this.nh(n) / 2 });
+    const deg = {}; edges.forEach(e => { deg[e.from] = (deg[e.from] || 0) + 1; deg[e.to] = (deg[e.to] || 0) + 1; });
+
+    const paths = [], labels = [];
+    edges.forEach(e => {
+      const a = byId[e.from], b = byId[e.to];
+      if (!a || !b) return;
+      const ca = ctr(a), cb = ctr(b);
+      const s = this.clip(ca, cb, this.nh(a)), t = this.clip(cb, ca, this.nh(b));
+      const on = sel && sel.type === 'edge' && sel.id === e.id;
+      const d = this.pathFor(s, t);
+      paths.push(h('g', { key: 'e' + e.id, style: { cursor: 'pointer' },
+        onMouseDown: (ev) => { ev.stopPropagation(); this.setState({ sel: { type: 'edge', id: e.id }, status: 'seta selecionada · Delete remove · duplo clique rotula' }); },
+        onDoubleClick: (ev) => { ev.stopPropagation(); this.editEdge(e.id); },
+        onContextMenu: (ev) => { ev.preventDefault(); ev.stopPropagation(); this.setState({ menu: { x: ev.clientX, y: ev.clientY, type: 'edge', id: e.id }, sel: { type: 'edge', id: e.id } }); } },
+        h('path', { d, stroke: 'transparent', strokeWidth: 18, fill: 'none' }),
+        h('path', { d, stroke: on ? '#f5d896' : accent, strokeWidth: on ? 2.6 : 1.7, fill: 'none', markerEnd: 'url(#dcArrow)' })
+      ));
+      if (e.label !== null && e.label !== undefined) {
+        const m = this.mid(s, t);
+        labels.push({ id: e.id, x: Math.round(m.x), y: Math.round(m.y), value: e.label, stroke: on ? accent : 'var(--edge1)',
+          onChange: (ev) => { const v = ev.target.value; this.setState(st => ({ edges: st.edges.map(x => x.id === e.id ? Object.assign({}, x, { label: v }) : x) })); },
+          onBlur: (ev) => { if (!ev.target.value.trim()) this.setState(st => ({ edges: st.edges.map(x => x.id === e.id ? Object.assign({}, x, { label: null }) : x) })); } });
+      }
+    });
+
+    if (link) {
+      const a = byId[link.from];
+      if (a) {
+        const ca = ctr(a);
+        const tgt = hover && byId[hover] ? this.clip(ctr(byId[hover]), ca, this.nh(byId[hover])) : { x: link.x, y: link.y };
+        const s = this.clip(ca, tgt, this.nh(a));
+        const back = link.mode === 'back';
+        paths.push(h('path', { key: 'pending', d: back ? this.pathFor(tgt, s) : this.pathFor(s, tgt), stroke: back ? '#6fb8d3' : accent, strokeWidth: 1.7, strokeDasharray: '6 5', fill: 'none', markerEnd: back ? 'url(#dcArrowBack)' : 'url(#dcArrow)' }));
+      }
+    }
+
+    const marker = (id, col) => h('marker', { id, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 6.5, markerHeight: 6.5, orient: 'auto-start-reverse' }, h('path', { d: 'M0,0 L10,5 L0,10 z', fill: col }));
+    const edgeLayer = h('svg', { width: 12000, height: 12000, viewBox: '-6000 -6000 12000 12000', style: { position: 'absolute', left: '-6000px', top: '-6000px', overflow: 'visible', pointerEvents: 'none' } },
+      h('defs', null, marker('dcArrow', accent), marker('dcArrowBack', '#6fb8d3')),
+      h('g', { style: { pointerEvents: 'auto' } }, paths));
+
+    const needle = q.trim().toLowerCase();
+    const results = this.tools.filter(t => !needle || (t.n + ' ' + t.c + ' ' + t.tags).toLowerCase().includes(needle))
+      .map(t => Object.assign({}, t, { dim: t.col + '1f', add: () => this.addTool(t) }));
+
+    let menuItems = [];
+    if (menu && menu.type === 'node') {
+      const id = menu.id;
+      menuItems = [
+        { label: 'Duplicar node', hint: 'Ctrl+D', col: 'var(--txt)', act: () => this.duplicate(id) },
+        { label: 'Copy metadata', hint: 'JSON', col: 'var(--txt)', act: () => this.copyMeta(id) },
+        { label: 'Colar node', hint: 'Ctrl+V', col: 'var(--txt)', act: () => this.pasteNode() },
+        { label: 'Excluir node', hint: 'Del', col: '#e07a6a', act: () => this.removeNode(id) }
+      ];
+    } else if (menu && menu.type === 'edge') {
+      const id = menu.id;
+      menuItems = [
+        { label: 'Edit description', hint: 'rótulo', col: 'var(--txt)', act: () => this.editEdge(id) },
+        { label: 'Delete edge', hint: 'Del', col: '#e07a6a', act: () => this.setState({ menu: null }, () => this.removeEdge(id)) }
+      ];
+    } else if (menu && menu.type === 'canvas') {
+      menuItems = [
+        { label: 'Colar node aqui', hint: 'Ctrl+V', col: 'var(--txt)', act: () => this.pasteNode(menu.at) },
+        { label: 'Copiar fluxo (JSON)', hint: 'todo', col: 'var(--txt)', act: () => this.copyJson() },
+        { label: 'Centralizar origem', hint: '0,0', col: 'var(--txt)', act: () => { this.setState({ menu: null }); this.center(); } }
+      ];
+    }
+
+    return {
+      cx: this.state.cursor.x, cy: this.state.cursor.y,
+      zoomPct: Math.round(this.state.scale * 100),
+      zoomIn: () => this.zoomTo(this.state.scale * 1.2),
+      zoomOut: () => this.zoomTo(this.state.scale / 1.2),
+      resetView: () => this.center(),
+      onDown: (e) => this.onDown(e),
+      onMove: (e) => this.onMove(e),
+      onUp: () => this.onUp(),
+      onWheel: (e) => this.onWheel(e),
+      onCanvasMenu: (e) => this.onCanvasMenu(e),
+      stop: (e) => e.stopPropagation(),
+      boxOpen: this.state.boxOpen,
+      toggleBox: () => this.setState(s => ({ boxOpen: !s.boxOpen, menu: null })),
+      saveOpen: this.state.saveOpen,
+      toggleSave: () => this.setState(s => ({ saveOpen: !s.saveOpen, menu: null })),
+      savePng: () => this.savePng(), saveJson: () => this.saveJson(), copyJson: () => this.copyJson(),
+      organize: () => this.organize(),
+      toggleTheme: () => this.toggleTheme(),
+      themeIcon: this.light ? '☾' : '☀',
+      q, hasQuery: needle.length > 0,
+      onSearch: (e) => this.setState({ q: e.target.value }),
+      clearSearch: () => this.setState({ q: '' }),
+      results, resultCount: results.length, totalCount: this.tools.length, noResults: results.length === 0,
+      edgeLayer, edgeLabels: labels,
+      isEmpty: nodes.length === 0,
+      nodeCount: nodes.length, edgeCount: edges.length, statusMsg: this.state.status,
+      hasMenu: !!menu, menuX: menu ? menu.x : 0, menuY: menu ? menu.y : 0, menuItems,
+      nodes: nodes.map(n => {
+        const isSel = sel && sel.type === 'node' && sel.id === n.id;
+        const isTgt = link && hover === n.id && link.from !== n.id;
+        const hasDesc = n.desc !== null && n.desc !== undefined;
+        return Object.assign({}, n, {
+          dim: n.col + '1f',
+          stroke: isTgt ? (link.mode === 'back' ? '#6fb8d3' : accent) : (isSel ? 'var(--edge2)' : 'var(--edge1)'),
+          shadow: isTgt ? '0 0 0 3px ' + accent + '33' : 'var(--nodesh)',
+          cxy: Math.round(n.x + this.W / 2) + ', ' + Math.round(-(n.y + this.nh(n) / 2)),
+          degree: (deg[n.id] || 0) + ' conex.',
+          hasDesc, desc: n.desc || '', descColor: hasDesc ? accent : 'var(--mut2)',
+          metaVisible: (n.meta || []).length > 0 && n.metaOpen !== false,
+          metaCount: (n.meta || []).length ? (n.meta || []).length + ' metadata' : 'sem metadata',
+          metaColor: (n.meta || []).length ? 'var(--mut)' : 'var(--mut4)',
+          caret: (n.meta || []).length === 0 ? '·' : (n.metaOpen !== false ? '▾' : '▸'),
+          toggleMeta: (e) => { e.stopPropagation(); if (!(n.meta || []).length) return; this.patch(n.id, { metaOpen: n.metaOpen === false }); },
+          meta: (n.meta || []).map((m, i) => Object.assign({}, m, {
+            onKey: (e) => { const v = e.target.value; this.patch(n.id, { meta: n.meta.map((x, j) => j === i ? Object.assign({}, x, { k: v }) : x) }); },
+            onVal: (e) => { const v = e.target.value; this.patch(n.id, { meta: n.meta.map((x, j) => j === i ? Object.assign({}, x, { v }) : x) }); },
+            remove: (e) => { e.stopPropagation(); this.patch(n.id, { meta: n.meta.filter((x, j) => j !== i) }); }
+          })),
+          addMeta: (e) => { e.stopPropagation(); this.patch(n.id, { meta: (n.meta || []).concat([{ k: '', v: '' }]), metaOpen: true }); this.setState({ sel: { type: 'node', id: n.id }, status: 'metadata adicionada' }); },
+          toggleDesc: (e) => { e.stopPropagation(); this.patch(n.id, { desc: hasDesc ? null : '' }); },
+          onDesc: (e) => { const v = e.target.value; this.patch(n.id, { desc: v }); },
+          onDown: (e) => {
+            e.stopPropagation();
+            const w = this.toWorld(e);
+            this.setState({ drag: { id: n.id, dx: w.x - n.x, dy: w.y - n.y }, sel: { type: 'node', id: n.id }, menu: null, saveOpen: false, status: n.n });
+          },
+          onMenu: (e) => { e.preventDefault(); e.stopPropagation(); this.setState({ menu: { x: e.clientX, y: e.clientY, type: 'node', id: n.id }, sel: { type: 'node', id: n.id } }); },
+          onEnter: () => this.setState({ hover: n.id }),
+          onLeave: () => this.setState(s => ({ hover: s.hover === n.id ? null : s.hover })),
+          startLink: (e) => { e.stopPropagation(); const w = this.toWorld(e); this.setState({ link: { from: n.id, mode: 'fwd', x: w.x, y: w.y }, status: 'arraste até o node de destino' }); },
+          startBack: (e) => { e.stopPropagation(); const w = this.toWorld(e); this.setState({ link: { from: n.id, mode: 'back', x: w.x, y: w.y }, status: 'arraste até o node de origem (seta para trás)' }); },
+          remove: (e) => { e.stopPropagation(); this.removeNode(n.id); }
+        });
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1301 @@
+.fe-root {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--txt);
+  overflow: hidden;
+}
+
+/* ---------- header ---------- */
+.fe-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  height: 54px;
+  flex: none;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  box-shadow: var(--sh-header);
+  position: relative;
+  z-index: 40;
+}
+.fe-logo {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  background: #e8c26a;
+  color: var(--bg);
+  border-radius: 5px;
+  box-shadow: var(--sh-chip);
+  font: 600 13px 'IBM Plex Mono', monospace;
+}
+.fe-title-block { display: flex; flex-direction: column; gap: 1px; }
+.fe-title { font: 600 13.5px/1 'IBM Plex Sans', sans-serif; letter-spacing: -0.01em; }
+.fe-subtitle { font: 400 10px/1 'IBM Plex Mono', monospace; color: var(--mut2); letter-spacing: 0.06em; }
+
+.fe-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: none;
+  white-space: nowrap;
+  padding: 7px 11px;
+  background: var(--btn);
+  border: 1px solid var(--edge1);
+  border-radius: 6px;
+  box-shadow: var(--sh-1);
+  color: var(--txt);
+  font: 500 12px 'IBM Plex Sans', sans-serif;
+  cursor: pointer;
+}
+.fe-btn:hover { background: var(--btnh); border-color: var(--edge2); box-shadow: var(--sh-2); }
+.fe-btn:active { box-shadow: var(--sh-inset); }
+.fe-btn-accent-mark { font: 600 11px 'IBM Plex Mono', monospace; color: #e8c26a; }
+.fe-caret { color: var(--mut2); font-size: 9px; }
+
+.fe-save-anchor { position: relative; margin-left: 2px; }
+/* Actions gathers import and sharing under one button: same dropdown as
+   Save (.fe-save-menu), and the sharing panel is anchored here too. */
+.fe-actions-anchor { position: relative; }
+.fe-btn-on { border-color: var(--edge2); background: var(--btnh); }
+
+/* The header logo goes back to the home. */
+.fe-home-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 6px 4px 4px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+.fe-home-link:hover { background: var(--btn); border-color: var(--line); }
+
+/* Selo de leitura, ao lado do nome do documento. */
+.fe-readonly {
+  flex: none;
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--btn);
+  color: var(--mut2);
+  font: 500 10px 'IBM Plex Mono', monospace;
+  letter-spacing: 0.04em;
+}
+.fe-save-menu {
+  position: absolute;
+  right: 0;
+  top: 40px;
+  width: 236px;
+  background: var(--card);
+  border: 1px solid var(--edge1);
+  border-radius: 8px;
+  box-shadow: var(--pop);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.fe-menu-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+  padding: 9px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  width: 100%;
+}
+.fe-menu-item:hover { background: var(--btnh); }
+.fe-menu-item-title { display: flex; align-items: center; gap: 8px; font: 500 12.5px 'IBM Plex Sans', sans-serif; color: var(--txt); }
+.fe-menu-item-mark { width: 14px; text-align: center; color: #e8c26a; font: 600 12px 'IBM Plex Mono', monospace; }
+.fe-menu-item-sub { font: 400 10.5px 'IBM Plex Mono', monospace; color: var(--mut2); }
+
+.fe-spacer { flex: 1; }
+
+/* ---------- menu de compartilhamento ---------- */
+.fe-share-menu {
+  position: absolute;
+  right: 0;
+  top: 40px;
+  width: 328px;
+  max-height: 70vh;
+  overflow: auto;
+  background: var(--card);
+  border: 1px solid var(--edge1);
+  border-radius: 8px;
+  box-shadow: var(--pop);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.fe-share-panel { display: flex; flex-direction: column; gap: 10px; padding: 2px; }
+.fe-share-back {
+  align-self: flex-start;
+  padding: 4px 6px;
+  background: transparent;
+  border: none;
+  border-radius: 5px;
+  color: var(--mut2);
+  font: 500 11px 'IBM Plex Sans', sans-serif;
+  cursor: pointer;
+}
+.fe-share-back:hover { background: var(--btnh); color: var(--txt); }
+.fe-share-form { display: flex; flex-direction: column; gap: 8px; padding: 0 4px; }
+.fe-share-row { display: flex; align-items: center; gap: 8px; }
+.fe-share-row .fe-btn { flex: none; }
+.fe-select {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 8px;
+  background: var(--field);
+  border: 1px solid var(--edge1);
+  border-radius: 6px;
+  box-shadow: var(--sh-inset);
+  color: var(--txt);
+  font: 400 12px 'IBM Plex Sans', sans-serif;
+  cursor: pointer;
+}
+.fe-select:focus { border-color: var(--edge2); }
+.fe-field-area { resize: vertical; line-height: 1.45; }
+.fe-share-list { display: flex; flex-direction: column; gap: 2px; border-top: 1px solid var(--line2); padding-top: 8px; }
+.fe-share-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 4px;
+  border-radius: 6px;
+}
+.fe-share-item:hover { background: var(--rowh); }
+.fe-share-item .fe-select { flex: 0 1 118px; padding: 4px 6px; font-size: 11px; }
+.fe-share-who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.fe-share-name {
+  font: 500 12px 'IBM Plex Sans', sans-serif;
+  color: var(--txt);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fe-share-mail {
+  font: 400 10px 'IBM Plex Mono', monospace;
+  color: var(--mut3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fe-share-empty { padding: 12px 6px; text-align: center; font: 400 11.5px 'IBM Plex Sans', sans-serif; color: var(--mut3); }
+.fe-share-notice {
+  margin: 4px;
+  padding: 7px 9px;
+  border-radius: 6px;
+  background: var(--btn);
+  border: 1px solid var(--line);
+  font: 400 11px 'IBM Plex Sans', sans-serif;
+  color: var(--txt3);
+}
+
+/* A tool is not clickable when the flow is read-only. */
+.fe-tool-row-off { opacity: 0.5; cursor: not-allowed; }
+
+.fe-coord {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--btn);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: var(--sh-1);
+  font: 500 11px 'IBM Plex Mono', monospace;
+  color: var(--mut);
+}
+.fe-coord-axis { color: var(--mut3); }
+.fe-coord-val { color: var(--txt); min-width: 40px; display: inline-block; }
+
+.fe-zoom {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--btn);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: var(--sh-1);
+  padding: 3px;
+}
+.fe-zoom-btn {
+  width: 26px;
+  height: 24px;
+  background: transparent;
+  border: none;
+  color: var(--txt3);
+  font: 500 15px 'IBM Plex Mono', monospace;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.fe-zoom-btn:hover { background: var(--btnh); color: var(--txt); }
+.fe-zoom-pct { min-width: 44px; text-align: center; font: 500 11px 'IBM Plex Mono', monospace; color: var(--mut); }
+
+.fe-ghost-btn {
+  flex: none;
+  white-space: nowrap;
+  padding: 7px 10px;
+  background: transparent;
+  border: 1px solid var(--edge1);
+  border-radius: 6px;
+  color: var(--txt3);
+  font: 500 11px 'IBM Plex Sans', sans-serif;
+  cursor: pointer;
+}
+.fe-ghost-btn:hover { border-color: var(--edge2); color: var(--txt); background: var(--btn); box-shadow: var(--sh-1); }
+
+/* Undo / redo: two small buttons side by side, drawn like the zoom pair. */
+.fe-hist {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+  background: var(--btn);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: var(--sh-1);
+  padding: 2px;
+}
+.fe-hist-btn {
+  width: 26px;
+  height: 25px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--txt3);
+  font: 400 15px/1 'IBM Plex Sans', sans-serif;
+  cursor: pointer;
+}
+.fe-hist-btn:hover:not(:disabled) { background: var(--btnh); color: var(--txt); }
+.fe-hist-btn:disabled { color: var(--mut4); cursor: default; }
+
+.fe-icon-toggle {
+  width: 31px;
+  height: 31px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  background: var(--btn);
+  border: 1px solid var(--edge1);
+  border-radius: 6px;
+  color: var(--txt3);
+  box-shadow: var(--sh-1);
+  font: 400 13px 'IBM Plex Mono', monospace;
+  cursor: pointer;
+}
+.fe-icon-toggle:hover { border-color: var(--edge2); color: var(--txt); box-shadow: var(--sh-2); }
+
+.fe-organize-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  white-space: nowrap;
+  padding: 7px 10px;
+  background: transparent;
+  border: 1px solid var(--edge1);
+  border-radius: 6px;
+  color: var(--txt3);
+  font: 500 11px 'IBM Plex Sans', sans-serif;
+  cursor: pointer;
+}
+.fe-organize-btn:hover { border-color: #e8c26a; color: #e8c26a; background: var(--btn); box-shadow: var(--sh-1); }
+
+/* ---------- body ---------- */
+.fe-body { flex: 1; display: flex; min-height: 0; }
+
+/* ---------- sidebar ---------- */
+.fe-sidebar {
+  /* A largura chega inline, do estado (resizeSidebar). */
+  width: 290px;
+  position: relative;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+  box-shadow: var(--sh-panel);
+  z-index: 3;
+}
+
+/* The resize handle on the sidebar's right edge. */
+.fe-sidebar-resizer {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 5;
+}
+.fe-sidebar-resizer:hover { background: var(--edge2); }
+/* During the drag the cursor must not change over the canvas, and no text
+   should be selected. */
+body.fe-resizing { cursor: col-resize; user-select: none; }
+
+/* Collapsed sidebar: a narrow rail, which is what brings it back -- there is
+   no "Tools" button in the header any more. */
+.fe-rail {
+  width: 34px;
+  flex: none;
+  display: flex;
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+  box-shadow: var(--sh-panel);
+  z-index: 3;
+}
+.fe-rail-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  background: transparent;
+  border: none;
+  color: var(--mut2);
+  cursor: pointer;
+}
+.fe-rail-btn:hover { background: var(--btn); color: var(--txt); }
+.fe-rail-icon { font: 600 13px 'IBM Plex Mono', monospace; color: #e8c26a; }
+.fe-rail-label {
+  writing-mode: vertical-rl;
+  font: 600 10px 'IBM Plex Mono', monospace;
+  letter-spacing: 0.16em;
+}
+
+.fe-sidebar-head-actions { display: flex; align-items: center; gap: 6px; }
+.fe-sidebar-head {
+  padding: 16px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-bottom: 1px solid var(--line2);
+}
+.fe-sidebar-head-row { display: flex; align-items: baseline; justify-content: space-between; }
+.fe-sidebar-label { font: 600 11px 'IBM Plex Mono', monospace; letter-spacing: 0.1em; color: var(--mut); }
+.fe-sidebar-count { font: 400 10.5px 'IBM Plex Mono', monospace; color: var(--mut3); }
+.fe-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  height: 36px;
+  background: var(--bg);
+  border: 1px solid var(--edge1);
+  border-radius: 7px;
+  box-shadow: var(--sh-inset);
+}
+.fe-search:focus-within { border-color: var(--edge2); }
+.fe-search-icon { color: var(--mut2); font: 500 12px 'IBM Plex Mono', monospace; }
+.fe-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--txt);
+  font: 400 12.5px 'IBM Plex Sans', sans-serif;
+  min-width: 0;
+}
+.fe-clear-btn { background: transparent; border: none; color: var(--mut2); font: 400 13px 'IBM Plex Mono', monospace; cursor: pointer; padding: 0; }
+.fe-clear-btn:hover { color: var(--txt); }
+
+.fe-tool-list { flex: 1; overflow-y: auto; padding: 8px; }
+.fe-tool-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 10px;
+  border-radius: 7px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  width: 100%;
+  background: transparent;
+  text-align: left;
+}
+.fe-tool-row:hover { background: var(--btn); border-color: var(--edge1); box-shadow: var(--sh-1); }
+.fe-tool-icon { width: 28px; height: 28px; flex: none; display: grid; place-items: center; border-radius: 6px; overflow: hidden; box-shadow: var(--sh-chip); font: 600 10px 'IBM Plex Mono', monospace; }
+.fe-tool-icon img { width: 100%; height: 100%; object-fit: contain; }
+.fe-tool-remove {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  color: var(--mut4);
+  font: 400 10px 'IBM Plex Mono', monospace;
+  cursor: pointer;
+}
+.fe-tool-row:hover .fe-tool-remove { border-color: var(--edge1); }
+.fe-tool-remove:hover { background: var(--dangerbg); border-color: var(--danger); color: var(--danger); }
+.fe-tool-info { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.fe-tool-name { font: 500 12.5px/1.2 'IBM Plex Sans', sans-serif; color: var(--txt); }
+.fe-tool-cat { font: 400 10px/1 'IBM Plex Mono', monospace; color: var(--mut2); letter-spacing: 0.04em; }
+.fe-tool-plus { font: 400 14px 'IBM Plex Mono', monospace; color: var(--mut4); }
+
+.fe-empty-results { padding: 26px 14px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.fe-empty-results-btn { margin-top: 8px; }
+.fe-new-tool-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  margin-bottom: 4px;
+  padding: 8px 10px;
+  background: var(--btn);
+  border: 1px dashed var(--edge2);
+  border-radius: 7px;
+  color: var(--txt);
+  font: 500 12px 'IBM Plex Sans', sans-serif;
+  cursor: pointer;
+}
+.fe-new-tool-btn:hover:not(:disabled) { border-color: #e8c26a; border-style: solid; box-shadow: var(--sh-1); }
+.fe-new-tool-btn:disabled { opacity: .45; cursor: not-allowed; }
+.fe-empty-results-title { font: 500 12px 'IBM Plex Sans', sans-serif; color: var(--mut); }
+.fe-empty-results-sub { font: 400 11px/1.5 'IBM Plex Sans', sans-serif; color: var(--mut3); }
+
+.fe-sidebar-foot { padding: 13px 16px; border-top: 1px solid var(--line2); display: flex; flex-direction: column; gap: 6px; }
+.fe-hint { font: 400 10.5px/1.5 'IBM Plex Sans', sans-serif; color: var(--mut2); }
+
+/* ---------- canvas ---------- */
+.fe-canvas {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background-color: var(--bg);
+  background-image: radial-gradient(circle, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: 0 0;
+}
+.fe-layer { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-origin: 0 0; }
+.fe-axis-x { position: absolute; left: -6000px; top: -1px; width: 12000px; height: 1px; background: var(--axis); }
+.fe-axis-y { position: absolute; left: -1px; top: -6000px; width: 1px; height: 12000px; background: var(--axis); }
+.fe-axis-label { position: absolute; font: 500 10px 'IBM Plex Mono', monospace; color: var(--mut4); }
+
+.fe-edge-label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+.fe-edge-label input {
+  width: 104px;
+  text-align: center;
+  padding: 4px 6px;
+  background: var(--card);
+  border-radius: 5px;
+  color: var(--txt);
+  font: 500 10.5px 'IBM Plex Mono', monospace;
+  border: 1px solid var(--edge1);
+  box-shadow: var(--sh-2);
+}
+
+/* Zoom and coordinates: they left the header and float over the plane,
+   right-aligned so they land just below the Save button. */
+.fe-viewtools {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.fe-viewtools .fe-zoom,
+.fe-viewtools .fe-coord { background: var(--panel); box-shadow: var(--sh-2); }
+
+.fe-empty-state {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.fe-empty-state-inner { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.fe-empty-state-title { font: 500 13px 'IBM Plex Sans', sans-serif; color: var(--mut2); }
+.fe-empty-state-sub { font: 400 11.5px 'IBM Plex Sans', sans-serif; color: var(--mut4); }
+
+.fe-statusbar {
+  position: absolute;
+  left: 14px;
+  bottom: 12px;
+  display: flex;
+  gap: 14px;
+  font: 400 10.5px 'IBM Plex Mono', monospace;
+  color: var(--mut4);
+  pointer-events: none;
+}
+[data-theme="light"] .fe-statusbar {
+  padding: 5px 9px;
+  border-radius: 6px;
+  background: var(--panel);
+  border: 1px solid var(--line2);
+  box-shadow: var(--sh-1);
+}
+.fe-statusbar .fe-status-msg { color: var(--mut); }
+
+/* ---------- group ----------
+   The box that holds nodes. It is the first thing drawn inside .fe-layer, so
+   it sits under the edges and the cards without needing a z-index; the dashed
+   border is what keeps it reading as a REGION rather than as a big card. */
+.fe-group {
+  position: absolute;
+  border: 1.5px dashed;
+  border-radius: 14px;
+  cursor: grab;
+  user-select: none;
+  transition: background 0.12s ease;
+}
+.fe-group:active { cursor: grabbing; }
+.fe-group-sel { border-style: solid; }
+/* While the box is being dragged or resized: it is then that the user needs to
+   see exactly where its edge falls, since that is what decides membership. */
+.fe-group-active { border-style: solid; box-shadow: var(--sh-node-drag); }
+
+.fe-group-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 12px;
+}
+.fe-group-swatch {
+  width: 11px;
+  height: 11px;
+  flex: none;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: var(--sh-chip);
+}
+.fe-group-name {
+  font: 600 11.5px 'IBM Plex Sans', sans-serif;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: text;
+}
+.fe-group-count {
+  margin-left: auto;
+  font: 400 10px 'IBM Plex Mono', monospace;
+  color: var(--mut3);
+  white-space: nowrap;
+}
+.fe-group-rename {
+  flex: 1;
+  min-width: 0;
+  padding: 2px 6px;
+  background: var(--field);
+  border: 1px solid var(--edge2);
+  border-radius: 5px;
+  color: var(--txt);
+  font: 600 11.5px 'IBM Plex Sans', sans-serif;
+}
+
+/* The palette hangs from the swatch, inside the box: the colour is a property
+   of the group, so it is set where the group's name is. */
+.fe-group-palette {
+  position: absolute;
+  left: 10px;
+  top: 32px;
+  display: flex;
+  gap: 5px;
+  padding: 6px;
+  background: var(--card);
+  border: 1px solid var(--edge1);
+  border-radius: 8px;
+  box-shadow: var(--pop);
+  cursor: default;
+}
+.fe-group-chip {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.fe-group-chip:hover { transform: scale(1.12); }
+.fe-group-chip-on { border-color: var(--txt); }
+
+.fe-group-resize {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+  border-radius: 0 0 12px 0;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  background:
+    linear-gradient(135deg, transparent 0 52%, var(--edge2) 52% 60%, transparent 60% 70%, var(--edge2) 70% 78%, transparent 78%);
+}
+.fe-group:hover .fe-group-resize, .fe-group-active .fe-group-resize { opacity: 1; }
+
+/* ---------- node ---------- */
+.fe-node {
+  position: absolute;
+  width: 232px;
+  /* A column: fixed header and footer, elastic body. That is what lets a node
+     take an explicit height (resizing) without crushing the footer. */
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  border: 1px solid var(--edge1);
+  border-radius: 9px;
+  box-shadow: var(--nodesh);
+  cursor: grab;
+  user-select: none;
+}
+.fe-node:hover { box-shadow: var(--sh-node-hover); }
+.fe-node:active { box-shadow: var(--sh-node-drag); }
+.fe-node-resizing { cursor: nwse-resize; }
+/* The body only scrolls with a fixed height: without one the node keeps
+   growing with its content, as it always did. */
+.fe-node-body { flex: 0 0 auto; }
+.fe-node-fixed .fe-node-body { flex: 1 1 auto; min-height: 0; overflow: auto; }
+.fe-node-head { display: flex; align-items: center; gap: 10px; padding: 11px 12px; flex: none; }
+.fe-node-icon { width: 30px; height: 30px; flex: none; display: grid; place-items: center; border-radius: 7px; overflow: hidden; box-shadow: var(--sh-chip); font: 600 10.5px 'IBM Plex Mono', monospace; }
+.fe-node-icon img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+.fe-node-info { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.fe-node-name { font: 500 13px/1.2 'IBM Plex Sans', sans-serif; color: var(--txt); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fe-node-cat { font: 400 9.5px/1.25 'IBM Plex Mono', monospace; color: var(--mut2); letter-spacing: 0.05em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* A renamed node: the technical stack name sits just below the custom name,
+   tinted with the tool colour, before the category. */
+.fe-node-stack { font-weight: 600; }
+.fe-node-sep { margin: 0 4px; color: var(--mut4); }
+.fe-node-name { cursor: text; }
+.fe-node-rename {
+  width: 100%;
+  padding: 1px 4px;
+  margin: -2px -4px 0;
+  background: var(--field);
+  border: 1px solid var(--edge2);
+  border-radius: 4px;
+  color: var(--txt);
+  font: 500 13px/1.2 'IBM Plex Sans', sans-serif;
+  outline: none;
+}
+.fe-desc-toggle {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 1px solid var(--edge1);
+  border-radius: 5px;
+  font: 400 10px 'IBM Plex Mono', monospace;
+  cursor: pointer;
+}
+.fe-desc-toggle:hover { border-color: var(--edge2); color: var(--txt); }
+
+.fe-node-desc { padding: 0 12px 10px; }
+.fe-node-desc textarea {
+  width: 100%;
+  resize: vertical;
+  padding: 7px 8px;
+  background: var(--field);
+  border: 1px solid var(--edge1);
+  border-radius: 6px;
+  box-shadow: var(--sh-inset);
+  color: var(--txt2);
+  font: 400 11.5px/1.45 'IBM Plex Sans', sans-serif;
+}
+
+/* The metadata list: it hangs BELOW the card, not inside it. Being absolute,
+   it does not enter the node's offsetHeight -- which is what decides where the
+   arrows stop (see metaPanelHeight in geometry.js). */
+.fe-meta-drop {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  margin-top: 6px;
+  max-height: 220px;
+  overflow: auto;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: var(--nodesh);
+}
+/* A 6px stroke joining the panel to the node footer. */
+.fe-meta-drop::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -7px;
+  width: 1px;
+  height: 7px;
+  background: var(--edge1);
+}
+.fe-meta-head {
+  display: grid;
+  grid-template-columns: 80px 1fr 22px;
+  align-items: center;
+  background: var(--head);
+  border-bottom: 1px solid var(--line);
+  padding: 5px 0 5px 8px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.fe-meta-head span { font: 600 8.5px 'IBM Plex Mono', monospace; color: var(--mut3); letter-spacing: 0.12em; }
+.fe-meta-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 22px;
+  align-items: center;
+  border-top: 1px solid var(--line3);
+  background: var(--field);
+}
+.fe-meta-row:hover { background: var(--rowh); }
+.fe-meta-row input.fe-meta-key {
+  width: 100%;
+  padding: 6px 6px 6px 8px;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--line3);
+  color: var(--mut);
+  font: 500 10.5px 'IBM Plex Mono', monospace;
+}
+.fe-meta-row input.fe-meta-val {
+  width: 100%;
+  min-width: 0;
+  padding: 6px 8px;
+  background: transparent;
+  border: none;
+  color: var(--txt);
+  font: 400 10.5px 'IBM Plex Mono', monospace;
+}
+.fe-meta-remove { width: 22px; height: 24px; background: transparent; border: none; color: var(--mut4); font: 400 10px 'IBM Plex Mono', monospace; cursor: pointer; }
+.fe-meta-remove:hover { color: #e07a6a; }
+
+.fe-node-foot {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  /* Room on the right: the corner belongs to the resize handle, and without it
+     the metadata "+" would sit underneath. */
+  padding: 6px 19px 6px 10px;
+  border-top: 1px solid var(--line2);
+}
+.fe-meta-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px;
+  background: transparent;
+  border: none;
+  border-radius: 5px;
+  font: 500 9.5px 'IBM Plex Mono', monospace;
+  cursor: pointer;
+}
+.fe-meta-toggle:hover { background: var(--btnh); color: var(--txt); }
+.fe-meta-caret { display: inline-block; width: 9px; text-align: center; font-size: 9px; }
+.fe-node-cxy { flex: 1; text-align: center; font: 400 9.5px 'IBM Plex Mono', monospace; color: var(--mut4); }
+.fe-meta-add {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  background: var(--btn);
+  border: 1px solid var(--edge1);
+  border-radius: 6px;
+  color: var(--txt3);
+  font: 400 13px 'IBM Plex Mono', monospace;
+  line-height: 1;
+  cursor: pointer;
+}
+.fe-meta-add:hover { border-color: #e8c26a; color: #e8c26a; background: var(--btnh); box-shadow: var(--sh-1); }
+
+/* The single port: the dot on the right of a node, dragged onto another one
+   to draw an arrow. */
+.fe-port {
+  position: absolute;
+  top: 20px;
+  right: -7px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--bg);
+  box-shadow: var(--sh-chip);
+  background: #e8c26a;
+  cursor: crosshair;
+}
+.fe-port:hover { background: #f5d896; }
+
+/* The resize handle: discreet until the pointer reaches the node. */
+.fe-node-resize {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  width: 14px;
+  height: 14px;
+  cursor: nwse-resize;
+  border-radius: 0 0 8px 0;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  background:
+    linear-gradient(135deg, transparent 0 52%, var(--edge2) 52% 60%, transparent 60% 70%, var(--edge2) 70% 78%, transparent 78%);
+}
+.fe-node:hover .fe-node-resize, .fe-node-resizing .fe-node-resize { opacity: 1; }
+.fe-node-resize:hover { background: linear-gradient(135deg, transparent 0 52%, #e8c26a 52% 60%, transparent 60% 70%, #e8c26a 70% 78%, transparent 78%); }
+
+/* ---------- context menu ---------- */
+.fe-context-menu {
+  position: fixed;
+  z-index: 60;
+  width: 212px;
+  background: var(--card);
+  border: 1px solid var(--edge1);
+  border-radius: 8px;
+  box-shadow: var(--pop);
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.fe-context-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 9px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+.fe-context-item:hover { background: var(--btnh); }
+.fe-context-label { font: 500 12px 'IBM Plex Sans', sans-serif; }
+.fe-context-hint { font: 400 10px 'IBM Plex Mono', monospace; color: var(--mut3); }
+
+/* ---------- the open document (header) ---------- */
+.fe-doc {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+  flex: none;
+  max-width: 220px;
+  padding: 5px 10px;
+  background: transparent;
+  border: 1px solid var(--line2);
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+}
+.fe-doc:hover { background: var(--btn); border-color: var(--edge1); box-shadow: var(--sh-1); }
+.fe-doc-name {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 500 12.5px/1 'IBM Plex Sans', sans-serif;
+  color: var(--txt);
+}
+.fe-doc-dot { color: #e8c26a; font-size: 15px; line-height: 0; }
+.fe-doc-sub { font: 400 10px/1 'IBM Plex Mono', monospace; color: var(--mut2); }
+
+.fe-doc-anchor { position: relative; }
+.fe-doc-on { background: var(--btn); border-color: var(--edge1); }
+.fe-doc-sub { display: flex; align-items: center; gap: 5px; }
+.fe-doc-caret { color: var(--mut3); font-size: 9px; }
+
+/* History: a dropdown on the document name (it used to be a side panel). */
+.fe-history-menu {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 6px);
+  z-index: 50;
+  width: 330px;
+  max-height: min(70vh, 520px);
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  border: 1px solid var(--edge1);
+  border-radius: 8px;
+  box-shadow: var(--pop);
+  overflow: hidden;
+}
+.fe-history-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 11px 10px 11px 13px;
+  border-bottom: 1px solid var(--line2);
+}
+.fe-history-title {
+  font: 500 12.5px 'IBM Plex Sans', sans-serif;
+  color: var(--txt);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fe-history-body { flex: 1; overflow-y: auto; padding: 6px 8px 10px; }
+.fe-history-section {
+  margin: 8px 4px 4px;
+  font: 600 9.5px 'IBM Plex Mono', monospace;
+  letter-spacing: 0.12em;
+  color: var(--mut3);
+}
+.fe-history-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 13px 16px;
+}
+.fe-history-cta-text { font: 400 11.5px/1.5 'IBM Plex Sans', sans-serif; color: var(--mut2); }
+
+.fe-menu-sep { height: 1px; margin: 4px 0; background: var(--line2); }
+
+/* ---------- side panels (library and history) ---------- */
+.fe-panel {
+  width: 320px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+  box-shadow: var(--sh-panel);
+  z-index: 2;
+}
+.fe-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--line2);
+}
+.fe-panel-title {
+  font: 600 11px 'IBM Plex Mono', monospace;
+  letter-spacing: 0.1em;
+  color: var(--mut);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fe-panel-close {
+  background: transparent;
+  border: none;
+  color: var(--mut2);
+  font: 400 12px 'IBM Plex Mono', monospace;
+  cursor: pointer;
+  padding: 0;
+}
+.fe-panel-close:hover { color: var(--txt); }
+.fe-panel-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line2);
+}
+.fe-panel-search {
+  flex: 1;
+  min-width: 0;
+  height: 32px;
+  padding: 0 10px;
+  background: var(--field);
+  border: 1px solid var(--edge1);
+  border-radius: 7px;
+  box-shadow: var(--sh-inset);
+  color: var(--txt);
+  font: 400 12px 'IBM Plex Sans', sans-serif;
+}
+.fe-panel-body { flex: 1; overflow: auto; padding: 8px 10px 16px; }
+.fe-panel-empty {
+  padding: 22px 8px;
+  text-align: center;
+  font: 400 11px 'IBM Plex Mono', monospace;
+  color: var(--mut3);
+}
+.fe-panel-sep {
+  margin: 14px 6px 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line2);
+  font: 600 10px 'IBM Plex Mono', monospace;
+  letter-spacing: 0.1em;
+  color: var(--mut3);
+}
+
+.fe-item {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+}
+.fe-item:hover { background: var(--rowh); border-color: var(--line2); box-shadow: var(--sh-1); }
+.fe-item-on { background: var(--btn); border-color: var(--edge1); box-shadow: var(--sh-1); }
+.fe-item-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 9px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  text-align: left;
+  text-decoration: none;
+}
+.fe-item-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 500 12.5px/1.3 'IBM Plex Sans', sans-serif;
+  color: var(--txt);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fe-item-tag {
+  flex: none;
+  padding: 1px 5px;
+  border: 1px solid var(--edge1);
+  border-radius: 4px;
+  font: 500 9px 'IBM Plex Mono', monospace;
+  letter-spacing: 0.04em;
+  color: var(--mut2);
+  text-transform: uppercase;
+}
+.fe-item-meta { font: 400 10px 'IBM Plex Mono', monospace; color: var(--mut3); }
+.fe-item-desc {
+  font: 400 10.5px/1.4 'IBM Plex Sans', sans-serif;
+  color: var(--mut2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fe-item-actions { display: flex; align-items: center; gap: 2px; padding-right: 6px; }
+.fe-mini-btn {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  color: var(--mut2);
+  font: 400 11px 'IBM Plex Mono', monospace;
+  cursor: pointer;
+}
+.fe-mini-btn:hover { background: var(--btnh); border-color: var(--edge1); color: var(--txt); }
+.fe-mini-danger:hover { background: var(--dangerbg); border-color: var(--danger); color: var(--danger); }
+
+/* ---------- barra de status ---------- */
+.fe-statusbar .fe-status-doc { color: var(--mut3); }
+.fe-statusbar .fe-status-dirty { color: #e8c26a; }
+
+/* ---------- modal (cadastro de ferramenta) ---------- */
+.fe-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--scrim);
+  backdrop-filter: blur(2px);
+}
+.fe-modal {
+  width: 100%;
+  max-width: 430px;
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  border: 1px solid var(--edge1);
+  border-radius: 10px;
+  box-shadow: var(--pop);
+  overflow: hidden;
+}
+.fe-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 15px 14px 13px 16px;
+  border-bottom: 1px solid var(--line2);
+}
+.fe-modal-titles { display: flex; flex-direction: column; gap: 4px; }
+.fe-modal-title { font: 600 13.5px 'IBM Plex Sans', sans-serif; color: var(--txt); }
+.fe-modal-sub { font: 400 11px/1.45 'IBM Plex Sans', sans-serif; color: var(--mut2); }
+.fe-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+.fe-modal-preview {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 12px;
+  background: var(--field);
+  border: 1px solid var(--line2);
+  border-radius: 8px;
+}
+.fe-modal-icon {
+  width: 34px;
+  height: 34px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  overflow: hidden;
+  font: 600 11px 'IBM Plex Mono', monospace;
+}
+.fe-modal-icon img { width: 100%; height: 100%; object-fit: contain; }
+.fe-modal-preview-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.fe-modal-preview-name { font: 500 12.5px 'IBM Plex Sans', sans-serif; color: var(--txt); }
+.fe-modal-preview-cat { font: 400 9.5px 'IBM Plex Mono', monospace; color: var(--mut2); letter-spacing: 0.05em; }
+
+.fe-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.fe-field-row { display: flex; gap: 10px; }
+.fe-field-row .fe-field { flex: 1; }
+.fe-field-narrow { max-width: 110px; }
+.fe-field-label {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font: 600 10px 'IBM Plex Mono', monospace;
+  letter-spacing: 0.1em;
+  color: var(--mut);
+  text-transform: uppercase;
+}
+.fe-field-hint { font: 400 10px 'IBM Plex Mono', monospace; color: var(--mut3); letter-spacing: 0; text-transform: none; }
+.fe-field-input {
+  width: 100%;
+  min-width: 0;
+  height: 34px;
+  padding: 0 10px;
+  background: var(--field);
+  border: 1px solid var(--edge1);
+  border-radius: 7px;
+  box-shadow: var(--sh-inset);
+  color: var(--txt);
+  font: 400 12.5px 'IBM Plex Sans', sans-serif;
+}
+.fe-field-input:focus { outline: none; border-color: var(--edge2); }
+
+.fe-swatches { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.fe-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  box-shadow: var(--sh-chip);
+  cursor: pointer;
+  padding: 0;
+}
+.fe-swatch-on { border-color: var(--txt); }
+.fe-swatch-custom {
+  width: 26px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--edge1);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.fe-icon-picker { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+/* Danger zone: the delete that cannot be undone, kept away from the fields
+   and locked until the server says the tool is used nowhere. */
+.fe-danger {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 12px 13px;
+  border: 1px solid var(--danger);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--danger) 7%, transparent);
+}
+.fe-danger-title {
+  font: 600 10px/1 'IBM Plex Mono', monospace;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--danger);
+}
+.fe-danger-sub { font: 400 11px/1.5 'IBM Plex Sans', sans-serif; color: var(--mut); }
+.fe-danger-list {
+  margin: 0;
+  padding-left: 16px;
+  font: 400 11px/1.6 'IBM Plex Sans', sans-serif;
+  color: var(--mut2);
+  max-height: 92px;
+  overflow-y: auto;
+}
+.fe-danger-btn {
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 6px 12px;
+  border: 1px solid var(--danger);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--danger);
+  font: 500 12px 'IBM Plex Sans', sans-serif;
+  cursor: pointer;
+}
+.fe-danger-btn:hover:not(:disabled) { background: var(--danger); color: var(--bg); }
+.fe-danger-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+.fe-modal-error {
+  padding: 8px 10px;
+  background: var(--dangerbg);
+  border: 1px solid var(--danger);
+  border-radius: 7px;
+  color: var(--danger);
+  font: 400 11.5px/1.45 'IBM Plex Sans', sans-serif;
+}
+.fe-modal-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--line2);
+  background: var(--panel);
+  box-shadow: var(--sh-foot);
+}
+.fe-modal-foot .fe-btn[disabled] { opacity: 0.5; cursor: not-allowed; }

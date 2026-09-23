@@ -78,13 +78,13 @@ export function straightPath(s, t) {
 }
 
 export function pathFor(s, t) {
-  if (EDGE_STYLE === 'reta') return 'M' + s.x + ',' + s.y + ' L' + t.x + ',' + t.y;
+  if (EDGE_STYLE === 'straight') return 'M' + s.x + ',' + s.y + ' L' + t.x + ',' + t.y;
   const c = controlPoints(s, t);
   return 'M' + s.x + ',' + s.y + ' C' + c[0].x + ',' + c[0].y + ' ' + c[1].x + ',' + c[1].y + ' ' + t.x + ',' + t.y;
 }
 
 export function midPoint(s, t) {
-  if (EDGE_STYLE === 'reta') return { x: (s.x + t.x) / 2, y: (s.y + t.y) / 2 };
+  if (EDGE_STYLE === 'straight') return { x: (s.x + t.x) / 2, y: (s.y + t.y) / 2 };
   const c = controlPoints(s, t);
   return { x: (s.x + 3 * c[0].x + 3 * c[1].x + t.x) / 8, y: (s.y + 3 * c[0].y + 3 * c[1].y + t.y) / 8 };
 }

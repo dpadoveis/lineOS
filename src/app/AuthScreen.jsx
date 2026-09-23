@@ -1,9 +1,25 @@
 import { useState } from 'react';
+import Brand from './Brand.jsx';
 
-// Sign in / sign up. One screen, two modes: registration is open, so the
-// difference is a single extra field and which endpoint gets called.
-export default function AuthScreen({ mode: initialMode, onSignIn, onSignUp, themeIcon, onToggleTheme }) {
-  const [mode, setMode] = useState(initialMode === 'register' ? 'register' : 'login');
+// Sign in / sign up. One screen, two modes: the difference is a single extra
+// field and which endpoint gets called. `registration` (from /api/auth/me)
+// decides whether sign-up is offered at all:
+//   first_run -> the server has no account yet: only sign-up, for the admin;
+//   open      -> both modes;
+//   invite    -> sign-up only with a share link opened in this tab;
+//   closed    -> sign-in only.
+export default function AuthScreen({
+  mode: initialMode,
+  registration = 'open',
+  hasInvite = false,
+  onSignIn,
+  onSignUp,
+  themeIcon,
+  onToggleTheme
+}) {
+  const firstRun = registration === 'first_run';
+  const canRegister = firstRun || registration === 'open' || (registration === 'invite' && hasInvite);
+  const [mode, setMode] = useState(firstRun || (initialMode === 'register' && canRegister) ? 'register' : 'login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,18 +51,18 @@ export default function AuthScreen({ mode: initialMode, onSignIn, onSignUp, them
 
       <form className="fe-auth-card" onSubmit={submit}>
         <div className="fe-auth-brand">
-          <div className="fe-logo">◇</div>
-          <div className="fe-title-block">
-            <span className="fe-title">Flow Editor</span>
-            <span className="fe-subtitle">CARTESIAN PLANE</span>
-          </div>
+          <Brand subtitle="DESIGN · BUILD · OBSERVE" />
         </div>
 
-        <h1 className="fe-auth-title">{registering ? 'Create your account' : 'Sign in'}</h1>
+        <h1 className="fe-auth-title">
+          {firstRun ? 'Set up lineOS' : registering ? 'Create your account' : 'Sign in'}
+        </h1>
         <p className="fe-auth-sub">
-          {registering
-            ? 'Your diagrams are private to your account, and you choose who to share each one with.'
-            : 'Your diagrams and the ones shared with you are waiting on the other side.'}
+          {firstRun
+            ? 'Nobody has signed up on this server yet. The account you create now is its admin.'
+            : registering
+              ? 'Your diagrams are private to your account, and you choose who to share each one with.'
+              : 'Your diagrams and the ones shared with you are waiting on the other side.'}
         </p>
 
         {registering && (
@@ -95,19 +111,28 @@ export default function AuthScreen({ mode: initialMode, onSignIn, onSignUp, them
         {error && <div className="fe-modal-error">{error}</div>}
 
         <button type="submit" className="fe-btn fe-auth-submit" disabled={!ready || busy}>
-          {busy ? 'Just a moment…' : registering ? 'Create account' : 'Sign in'}
+          {busy ? 'Just a moment…' : firstRun ? 'Create admin account' : registering ? 'Create account' : 'Sign in'}
         </button>
 
-        <button
-          type="button"
-          className="fe-auth-switch"
-          onClick={() => {
-            setMode(registering ? 'login' : 'register');
-            setError(null);
-          }}
-        >
-          {registering ? 'I already have an account' : "I don't have an account yet"}
-        </button>
+        {canRegister && !firstRun && (
+          <button
+            type="button"
+            className="fe-auth-switch"
+            onClick={() => {
+              setMode(registering ? 'login' : 'register');
+              setError(null);
+            }}
+          >
+            {registering ? 'I already have an account' : "I don't have an account yet"}
+          </button>
+        )}
+        {!canRegister && (
+          <p className="fe-auth-note">
+            {registration === 'invite'
+              ? 'New here? Accounts are by invitation: open a diagram someone shared with you, then sign up.'
+              : 'Sign-up is closed on this server. Ask its admin for access.'}
+          </p>
+        )}
       </form>
     </div>
   );

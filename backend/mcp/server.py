@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""MCP server for the Editor de Fluxo.
+"""MCP server for lineOS.
 
 Speaks the Model Context Protocol over stdio, so an MCP client (Claude Code,
 Claude Desktop, anything else) can list, read, create and version the diagrams
@@ -35,7 +35,7 @@ from catalog import Catalog  # noqa: E402
 from client import DEFAULT_BASE_URL, DEFAULT_TIMEOUT, ApiClient, ApiError  # noqa: E402
 from graph import SpecError  # noqa: E402
 
-SERVER_NAME = "flow-editor"
+SERVER_NAME = "lineos"
 SERVER_VERSION = "1.0.0"
 
 # Newest first. The client's own version is echoed back when we know it,
@@ -244,7 +244,7 @@ def check(context: toolset.Context) -> int:
 
 def main(argv=None) -> int:
     load_env_file()
-    parser = argparse.ArgumentParser(description="MCP server for the Editor de Fluxo.")
+    parser = argparse.ArgumentParser(description="MCP server for lineOS.")
     parser.add_argument(
         "--base-url",
         default=os.environ.get("FLOW_MCP_BASE_URL", DEFAULT_BASE_URL),

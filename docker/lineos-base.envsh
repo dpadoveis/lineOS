@@ -1,0 +1,15 @@
+#!/bin/sh
+# Sourced by the nginx image's entrypoint before it renders the templates.
+# From LINEOS_BASE ("/" or "/lineos/") it derives the two other forms the
+# template needs, so the build argument is the only thing an operator sets.
+base="${LINEOS_BASE:-/}"
+case "$base" in /*) ;; *) base="/$base" ;; esac
+case "$base" in */) ;; *) base="$base/" ;; esac
+export LINEOS_BASE="$base"
+export LINEOS_PREFIX="${base%/}"
+if [ -n "$LINEOS_PREFIX" ]; then
+  # Under a subpath: the bare prefix and the host root both lead to the SPA.
+  export LINEOS_REDIRECTS="location = $LINEOS_PREFIX { return 301 $LINEOS_BASE; } location = / { return 302 $LINEOS_BASE; }"
+else
+  export LINEOS_REDIRECTS=""
+fi

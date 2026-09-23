@@ -224,4 +224,4 @@ def test_heartbeats_from_several_directories(tmp_path):
     (b / "job_a.jsonl").write_text(line("job_a", "2026-09-22T11:30:00Z") + "\n")
     since = NOW - timedelta(days=1)
     runs = read_heartbeats(str(a), since) + read_heartbeats(str(b), since) + read_heartbeats(str(tmp_path / "missing"), since)
-    assert sorted(r.external_id for r in runs) == ["job_b", "job_a"]
+    assert sorted(r.external_id for r in runs) == ["job_a", "job_b"]

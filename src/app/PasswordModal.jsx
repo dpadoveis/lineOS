@@ -9,10 +9,10 @@ export default function PasswordModal({ onCancel, onSubmit }) {
   const [confirmation, setConfirmation] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
-  const primeiro = useRef(null);
+  const firstField = useRef(null);
 
   useEffect(() => {
-    if (primeiro.current) primeiro.current.focus();
+    if (firstField.current) firstField.current.focus();
   }, []);
 
   useEffect(() => {
@@ -59,7 +59,7 @@ export default function PasswordModal({ onCancel, onSubmit }) {
           <label className="fe-field">
             <span className="fe-field-label">Current password</span>
             <input
-              ref={primeiro}
+              ref={firstField}
               className="fe-field-input"
               type="password"
               value={current}

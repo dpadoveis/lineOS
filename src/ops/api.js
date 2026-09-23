@@ -3,8 +3,8 @@
 // `detail`.
 //
 // The base is resolved from BASE_URL, exactly as src/flow/api.js does, and NOT
-// hard-coded to '/api'. The SPA is published under /flow-editor/, and nginx
-// only proxies /flow-editor/api/ -- an absolute '/api' 404s in the published
+// hard-coded to '/api'. The SPA may be published under a subpath (LINEOS_BASE),
+// and nginx then only proxies <subpath>/api/ -- an absolute '/api' 404s in that
 // build while working fine in dev, so every screen in this module failed the
 // moment it left the dev server.
 import { getShareToken } from '../flow/api.js';
@@ -64,7 +64,7 @@ export const createPipeline = (name) =>
 // Promoting an existing diagram. Same route, with the flow named -- it goes
 // through `call` like everything else, so it inherits the resolved base path.
 // A raw fetch('/api/...') here worked in dev and 404'd in the published build,
-// because the SPA lives under /flow-editor/.
+// when the SPA lives under a subpath.
 export const promoteDiagram = (flowSlug, name) =>
   call('/pipelines', {
     method: 'POST',

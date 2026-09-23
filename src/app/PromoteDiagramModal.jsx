@@ -12,10 +12,10 @@ export default function PromoteDiagramModal({ diagrams, onCancel, onPromoted }) 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [monitored, setMonitored] = useState(new Set());
-  const primeiro = useRef(null);
+  const firstField = useRef(null);
 
   useEffect(() => {
-    if (primeiro.current) primeiro.current.focus();
+    if (firstField.current) firstField.current.focus();
   }, []);
 
   useEffect(() => {
@@ -142,7 +142,7 @@ export default function PromoteDiagramModal({ diagrams, onCancel, onPromoted }) 
 
         <div className="fe-modal-body">
           <input
-            ref={primeiro}
+            ref={firstField}
             className="fe-field-input"
             type="text"
             placeholder="Search diagrams…"

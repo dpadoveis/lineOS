@@ -1,4 +1,4 @@
-/* The ops canvas in the Flow Editor's identity. Every colour is a token from
+/* The ops canvas in lineOS's identity. Every colour is a token from
    src/flow/theme.css; the card copies .fe-node's declarations. React Flow's
    base.css gives structure only, so its chrome is styled here. */
 
@@ -39,8 +39,8 @@
 [data-theme="light"] .ops-card--run-running { border-color: #3d59a1; }
 [data-theme="light"] .ops-card--run-skipped { border-color: #2d6649; }
 @keyframes ops-pulse { 50% { box-shadow: 0 0 0 4px rgba(122, 162, 247, 0.18); } }
-.react-flow__node.selected .ops-card { outline: 2px solid #e8c26a; outline-offset: 3px; }
-[data-theme="light"] .react-flow__node.selected .ops-card { outline-color: #8f783f; }
+.react-flow__node.selected .ops-card { outline: 2px solid var(--accent); outline-offset: 3px; }
+[data-theme="light"] .react-flow__node.selected .ops-card { outline-color: var(--accent-ink); }
 /* Outside the lineage: faded and desaturated, so the flow reads at a glance. */
 .ops-card--dim { opacity: 0.12; filter: grayscale(0.7); }
 /* Inside the lineage (the selected node keeps its own ring): the lineage glow. */
@@ -164,6 +164,6 @@
   text-transform: uppercase;
   color: var(--mut2);
 }
-.ops-band--bronze .ops-band-label { color: #c08a5a; }
-.ops-band--silver .ops-band-label { color: #a4adb8; }
-.ops-band--gold .ops-band-label { color: #e8c26a; }
+.ops-band--bronze .ops-band-label { color: var(--layer-bronze); }
+.ops-band--silver .ops-band-label { color: var(--layer-silver); }
+.ops-band--gold .ops-band-label { color: var(--layer-gold); }

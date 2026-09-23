@@ -17,6 +17,9 @@ os.environ["DATABASE_URL"] = URL
 os.environ.setdefault("DB_SCHEMA", "flow_test")
 os.environ.setdefault("STORAGE_DIR", "/tmp/flow-test-files")
 os.environ.setdefault("AUTHOR", "pytest")
+# Most tests sign several accounts up; the registration policy has tests of
+# its own (test_registration.py), which switch it per test.
+os.environ.setdefault("REGISTRATION", "open")
 
 from fastapi.testclient import TestClient  # noqa: E402
 from sqlalchemy import text  # noqa: E402

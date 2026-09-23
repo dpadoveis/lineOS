@@ -113,13 +113,14 @@ def share_token_header(
     return x_share_token or share
 
 
-def _link_permission(db: Session, flow_id: int, token: str | None) -> str | None:
+def live_link(db: Session, token: str | None) -> FlowShareLink | None:
+    """The link behind a token, when it is neither revoked nor expired."""
     if not token:
         return None
     link = db.execute(
         select(FlowShareLink).where(FlowShareLink.token_hash == token_hash(token))
     ).scalar_one_or_none()
-    if link is None or link.flow_id != flow_id or link.revoked:
+    if link is None or link.revoked:
         return None
     if link.expires_at is not None:
         expires = link.expires_at
@@ -127,6 +128,13 @@ def _link_permission(db: Session, flow_id: int, token: str | None) -> str | None
             expires = expires.replace(tzinfo=timezone.utc)
         if expires <= datetime.now(timezone.utc):
             return None
+    return link
+
+
+def _link_permission(db: Session, flow_id: int, token: str | None) -> str | None:
+    link = live_link(db, token)
+    if link is None or link.flow_id != flow_id:
+        return None
     return link.permission
 
 

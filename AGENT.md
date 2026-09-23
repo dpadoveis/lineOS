@@ -6,7 +6,16 @@ traps are.
 
 ## What it is
 
-**Flow Editor**: a visual editor for data architectures on a cartesian plane.
+**lineOS** designs, builds and monitors data pipelines (the plan is in
+[`docs/ROADMAP.md`](docs/ROADMAP.md)). Its two modules today:
+
+- the **editor** (`src/flow/`), inherited from the Flow Editor — described
+  below;
+- **Data Lineage** (`src/ops/`, `backend/app/*_ops.py`, `ops/collector/`): a
+  diagram promoted to a watched lineage, with the health of each bound job and
+  table.
+
+The editor is a visual editor for data architectures on a cartesian plane.
 The user drags tools (Airflow, dbt, Kafka, Snowflake…) from a search box onto
 the plane, links them with labelled directed arrows, describes each step and
 attaches key/value metadata. The result can be laid out automatically in layers,
@@ -25,47 +34,49 @@ The project grew out of a Claude Design prototype, kept in `design/`.
 Two independent halves, joined by HTTP at `/api`:
 
 ```
-browser                          host
+browser                          docker compose (project "lineos")
 ┌──────────────────────┐         ┌──────────────────────────────────────┐
-│ React 18 + Vite      │         │ docker compose (project              │
-│ :5173 (npm run dev)  │         │   flow-editor)                       │
-│                      │  /api   │                                      │
-│ src/flow/*.jsx  ─────┼────────►│ flow-api     FastAPI  :8010 -> 8000  │
+│ React 18 + Vite      │         │ frontend   nginx      :8020 -> 80    │
+│ :5173 (npm run dev)  │         │      │ /api                          │
+│                      │  /api   │      ▼                               │
+│ src/flow/*.jsx  ─────┼────────►│ api        FastAPI    :8010 -> 8000  │
 │ src/flow/api.js      │  proxy  │      │                               │
 └──────────────────────┘  Vite   │      ▼                               │
-                                 │ flow-postgres   PG 17  :5433 -> 5432 │
-                                 │   schema "flow" in the "flows" db    │
-                                 │ volumes: flow_pgdata, flow_files     │
+                                 │ postgres   PG 17      :5433 -> 5432  │
+                                 │   schema "flow" in the "lineos" db   │
+                                 │ volumes: lineos_pgdata, lineos_files │
                                  └──────────────────────────────────────┘
 ```
 
 In development the frontend runs on Vite, and the `/api` proxy (in
 `vite.config.js`) avoids CORS. The **published version** is the compose file's
-`frontend` service: a static build served by nginx under `/flow-editor/`, also
-attached to `proxy-net` so the nginx-proxy-manager can reach it — see
-[`docs/DEPLOY.md`](docs/DEPLOY.md).
+`frontend` service: a static build served by nginx at `/` (or under the
+subpath in `FLOW_BASE`), which also proxies `/api` to the API — see
+[`docs/DEPLOY.md`](docs/DEPLOY.md). The dataset tabs of Data Lineage read a
+Postgres of the user's; joining its network is opt-in, in
+`docker-compose.lineage.yml`.
 
 ### MCP
 
 `backend/mcp/` publishes the editor to MCP clients (Claude Code, Claude
 Desktop): a stdio server that talks to the **API over HTTP**, like any other
 client, so permissions, validation and the 409 on concurrency apply to the agent
-too. Standard library only — the machine has no pip and no venv, and a server
-that needs installing is not running when the client tries to start it.
+too. Standard library only — a server that needs installing is not running
+when the client tries to start it, on a machine without pip or a venv.
 Credentials come from the `FLOW_MCP_*` keys in `.env`. Details in
 [`backend/mcp/README.md`](backend/mcp/README.md).
 
 ### Ports
 
-`5433` (Postgres) and `8010` (API) instead of the usual 5432/8000 because **the
-host already uses those two** for other services; both are bound to `127.0.0.1`
-only. The published frontend sits on `8020`.
-Vite, on `5173`.
+`5433` (Postgres) and `8010` (API) instead of the usual 5432/8000, so a stack
+started next to another Postgres or API does not collide with it; both are bound
+to `127.0.0.1` only, and both move with `FLOW_DB_PORT` / `FLOW_API_PORT`. The
+published frontend sits on `8020` (`FLOW_HTTP_PORT`), Vite on `5173`.
 
 ### Resource limits
 
-The services run on small shared hosts. That is why both services have an explicit ceiling
-(`deploy.resources.limits` in the compose file): **0.60 CPU each**, 512 MB for
+A small footprint is part of the pitch, so every service has an explicit
+ceiling (`deploy.resources.limits` in the compose file): **0.60 CPU each**, 512 MB for
 Postgres and 384 MB for the API. The Postgres tuning (`shared_buffers=128MB`,
 `max_connections=50`, parallelism off) and SQLAlchemy's `pool_size=5` exist to
 fit inside those ceilings — **do not raise one without the other**. Details and
@@ -75,7 +86,7 @@ rationale in [`docs/BACKEND.md`](docs/BACKEND.md).
 
 ```bash
 cp .env.example .env          # set FLOW_DB_PASSWORD
-docker compose up -d --build  # postgres + api + the published frontend
+docker compose up -d --build  # postgres + api + the frontend on :8020
 npm install && npm run dev    # http://localhost:5173
 ```
 
@@ -112,7 +123,7 @@ Do not report a change as done without the check for the half you touched.
 | Touched | Check |
 | --- | --- |
 | anything in `src/` | `npm run build`, then the manual round trip described under Tests |
-| the plane, the header, sharing, the home | the same, plus the `e2e/` suite — **against the disposable API on 8011**, never against 8010 |
+| the plane, the header, sharing, the home | the same, plus the `e2e/` suite — **against a disposable API** (`e2e/README.md`), never against your real one |
 | `backend/app/` | the pytest suite, with `DATABASE_URL_TEST` pointing at `flows_test` |
 | `backend/app/models.py` | the above, plus `docker compose up -d --build api` and `docker compose logs api` — the migration runs at startup |
 | `backend/mcp/` | `python3 backend/mcp/selftest.py` (the round-trip half needs the disposable API) |
@@ -244,18 +255,17 @@ the graph came from.
 - The project used to be half Portuguese: the flow routes were `/api/fluxos`,
   the identifiers were `gravarVersao` / `montar_detalhe`, the database was
   `fluxos` in the `fluxo` schema, the containers were `fluxo-*` and the subpath
-  was `/editor-fluxo/`. That conversion is **done**, with the database migrated,
-  the old subpath answering 301 and the API routes renamed. If you find a
-  Portuguese identifier anywhere, it is a leftover — rename it.
+  was `/editor-fluxo/`. That conversion is **done**, API routes and identifiers
+  included. If you find a Portuguese identifier anywhere, it is a leftover —
+  rename it.
 - The **payload fields have always been in English** (`nodes`, `edges`, `label`,
   `metadata`) and stay that way — it is the contract already published.
 - CSS: a flat `fe-` prefix (`fe-node-head`, `fe-item-main`) and colours
   **always** through the tokens in `src/flow/theme.css` (`--card`, `--txt`,
   `--edge1`), never literals — the light/dark theme depends on it.
-- The backend mirrors the choices of the sibling project `~/VistoPro`: FastAPI,
-  typed SQLAlchemy 2.0, `psycopg`, `pydantic-settings`, a dedicated Postgres
-  schema and an idempotent migration of its own (`app/migrations.py`) instead of
-  Alembic.
+- The backend: FastAPI, typed SQLAlchemy 2.0, `psycopg`, `pydantic-settings`,
+  a dedicated Postgres schema and an idempotent migration of its own
+  (`app/migrations.py`) instead of Alembic.
 - Zero new frontend dependencies: the native `fetch`, no axios, no state
   library, no UI framework.
 
@@ -284,7 +294,9 @@ the graph came from.
 | change the PNG export | `src/flow/exportPng.js` (`renderFlowCanvas` is shared by download and upload) |
 | touch the MCP server | `backend/mcp/` — `toolset.py` (tools), `graph.py` (spec → payload), its own `README.md` |
 | change size/resource ceilings | `backend/app/config.py` + `docker-compose.yml` |
-| change the published subpath | `docker/frontend.Dockerfile` (`VITE_BASE`), `docker/frontend-nginx.conf`, the location in the NPM's `1.conf` and `docs/DEPLOY.md` — all four together |
+| change the published subpath | nothing in the code: `FLOW_BASE` in `.env`, then `docker compose up -d --build frontend` (it feeds `VITE_BASE` and `docker/frontend-nginx.conf.template`) |
+| touch who may sign up | `registration` in `backend/app/config.py`, `register` in `routers/auth.py` · client in `src/app/AuthScreen.jsx` |
+| change the lineOS mark or name | `src/app/Brand.jsx` (every header uses it) |
 
 ### Groups
 
@@ -344,8 +356,8 @@ Two consequences worth knowing before changing anything there:
    between reopening and "Save as new".
 10. **The SPA's subpath is fixed at build time**, because Vite rewrites the asset
     URLs. `src/flow/api.js` derives the API base from
-    `import.meta.env.BASE_URL`, so the same build serves at the root and under
-    `/flow-editor/` — do not go back to a hard-coded `'/api'`.
+    `import.meta.env.BASE_URL`, so the same code serves at the root and under
+    a subpath — do not go back to a hard-coded `'/api'`.
 11. **`node.tool` is an icon reference, not an identity.** Dropping a registered
     tool on the plane *copies* name, category, initials and colour into the
     node; `tool` keeps only the slug, and only the icon is resolved through it at
@@ -385,10 +397,9 @@ Two consequences worth knowing before changing anything there:
     database keeps the sha256 (`security.token_hash`). A link token comes back
     **exactly once**, in the creation response; that is why the editor copies it
     to the clipboard right away. Losing it means creating another.
-18. **A link is a hash route** (`#/share/<token>`), not a path. The SPA is
-    published under `/flow-editor/` with nginx serving only `index.html`: with a
-    path, a shared link would depend on proxy configuration. See
-    `src/app/route.js`.
+18. **A link is a hash route** (`#/share/<token>`), not a path. nginx serves
+    only `index.html`, possibly under a subpath: with a path, a shared link
+    would depend on proxy configuration. See `src/app/route.js`.
 19. **`FlowListItem` carries owner and permission fields** (`owner_id`,
     `owner_name`, `permission`, `is_owner`, `shared_count`). The default for
     `permission` is `"full"`, for the internal calls that already went through
@@ -410,19 +421,25 @@ Two consequences worth knowing before changing anything there:
   old state means *inserting* a new version holding the old content
   (`POST /api/flows/{id}/versions/{n}/restore`).
 - **`.env`** — it holds the Postgres password and the bind IP, and it is in
-  `.gitignore`.
+  `.gitignore`. Instance data (real hosts, real fixtures, secrets, runbooks for
+  one deployment) never enters this repository.
 
 ## Tests
 
 ```bash
-docker exec flow-postgres psql -U flow -d postgres -c "CREATE DATABASE flows_test OWNER flow"
-docker run --rm --network flow-net -v "$PWD/backend:/app:ro" -w /app \
-  -e DATABASE_URL_TEST="postgresql+psycopg://flow:PASSWORD@postgres:5432/flows_test" \
-  --entrypoint bash flow-editor-api \
-  -c "pip install -q pytest httpx && python -m pytest -q"
+# a disposable database, on the stack's Postgres (or any Postgres 17)
+docker compose exec postgres psql -U lineos -d lineos -c "CREATE DATABASE flows_test"
+
+pip install -r backend/requirements-dev.txt
+cd backend && DATABASE_URL_TEST="postgresql+psycopg://lineos:PASSWORD@127.0.0.1:5433/flows_test" pytest -q
+npm test          # the frontend's unit tests (Vitest), from the root
 ```
 
-91 tests cover the payload round trip (the node's nickname and size included,
+CI (`.github/workflows/ci.yml`) runs both suites, the build, the MCP
+self-test, `docker compose up` on a clean runner and a secret scan on every
+push.
+
+The backend tests cover the payload round trip (the node's nickname and size included,
 and the group boxes), the validation rules, versioning, the 409 on concurrency,
 drafts, the trash, attachments, the tool catalog and its delete rule
 (`test_tools.py`) and accounts,
@@ -434,12 +451,12 @@ way a client would: `python3 backend/mcp/selftest.py`. The protocol half runs
 anywhere; the round-trip half **writes for real** and refuses to point at the
 production API — see `backend/mcp/README.md`.
 
-The end-to-end suite in `e2e/` (Playwright, through the shared
-`~/tools/browser-test` environment) covers sign-up, sharing and the password
-change through the interface. It writes for real too: run it against the
-disposable API from `e2e/README.md`.
+The end-to-end suite in `e2e/` (Playwright) covers sign-up, sharing and the
+password change through the interface. It is not wired into CI yet, and it
+writes for real: run it against the disposable API from `e2e/README.md`.
 
-Beyond that the frontend has no test suite. Before considering a change done:
+Beyond the unit tests of `src/ops/`, the frontend has no test suite. Before
+considering a change done:
 `npm run build` and a manual round trip — create nodes with a description,
 metadata and a labelled arrow, Ctrl+S, reload the page and reopen from the
 library.

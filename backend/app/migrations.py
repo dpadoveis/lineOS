@@ -34,6 +34,15 @@ _STATEMENTS: list[str] = [
     # `hidden` is how a built-in leaves the catalog. Both arrive on a table
     # that already holds the tools registered from scratch, where they are
     # null / false.
+    # The first account is the admin. On a database that already has accounts,
+    # the oldest one takes the role -- once: the NOT EXISTS keeps a later boot
+    # from promoting anybody else.
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT false",
+    """
+    UPDATE users SET is_admin = true
+    WHERE id = (SELECT min(id) FROM users)
+      AND NOT EXISTS (SELECT 1 FROM users WHERE is_admin)
+    """,
     "ALTER TABLE custom_tools ADD COLUMN IF NOT EXISTS builtin VARCHAR(80)",
     "CREATE UNIQUE INDEX IF NOT EXISTS uq_custom_tools_builtin ON custom_tools (builtin)",
     "ALTER TABLE custom_tools ADD COLUMN IF NOT EXISTS hidden BOOLEAN NOT NULL DEFAULT false",

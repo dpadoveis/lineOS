@@ -153,7 +153,7 @@ export default function Sidebar({
         >
           <span className="fe-btn-accent-mark">✎</span>Edit tool
         </button>
-        <span className="fe-hint">Drag the <span style={{ color: '#e8c26a' }}>●</span> on the right of a node onto another one to draw an arrow.</span>
+        <span className="fe-hint">Drag the <span style={{ color: 'var(--accent)' }}>●</span> on the right of a node onto another one to draw an arrow.</span>
         <span className="fe-hint">Double click an edge to label it (input, output…).</span>
         <span className="fe-hint">Double click a node name to rename it (F2); the stack name stays below.</span>
         <span className="fe-hint">Drag the bottom-right corner to resize a node; double click it to reset.</span>

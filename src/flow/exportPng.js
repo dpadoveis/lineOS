@@ -187,7 +187,7 @@ function renderFlowCanvas(nodes, edges, groups, heights, accent, icons) {
     const textWidth = wid - 64;
     c.fillStyle = T('txt');
     c.font = '500 13px sans-serif';
-    // Nome exibido: o apelido, quando o node foi renomeado.
+    // The name shown: the nickname, when the node was renamed.
     c.fillText(fit(n.label || n.n, textWidth), n.x + 52, n.y + 21);
     c.font = '400 9.5px monospace';
     if (n.label) {

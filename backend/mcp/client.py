@@ -1,4 +1,4 @@
-"""HTTP client for the Editor de Fluxo API, on the standard library alone.
+"""HTTP client for the lineOS API, on the standard library alone.
 
 No third-party package on purpose: this server has to start from a bare
 `python3`, and the host it runs on has neither pip nor a virtualenv.

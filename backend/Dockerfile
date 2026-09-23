@@ -8,9 +8,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
 
-RUN useradd -m appuser && mkdir -p /data/arquivos && chown -R appuser /data
+RUN useradd -m appuser && mkdir -p /data/files && chown -R appuser /data
 USER appuser
 
 EXPOSE 8000
-# Um worker: o host tem 2 vCPUs e o container e limitado a 0.60 CPU.
+# One worker: the container is capped at 0.60 CPU (docker-compose.yml).
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

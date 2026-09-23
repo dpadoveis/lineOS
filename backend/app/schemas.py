@@ -391,6 +391,8 @@ class RegisterRequest(BaseModel):
     name: Annotated[str, Field(min_length=1, max_length=120)]
     email: Email
     password: Annotated[str, Field(min_length=1, max_length=200)]
+    # A share-link token: the invitation when `registration` is "invite".
+    invite: Annotated[str | None, Field(max_length=200)] = None
 
     @field_validator("password")
     @classmethod
@@ -433,15 +435,18 @@ class UserItem(BaseModel):
     id: int
     name: str
     email: str
+    is_admin: bool = False
     created_at: datetime
 
 
 class SessionInfo(BaseModel):
-    """What the SPA needs on boot: who is signed in, and whether the server can
-    send email itself (otherwise the share menu falls back to mailto:)."""
+    """What the SPA needs on boot: who is signed in, whether the server can
+    send email itself (otherwise the share menu falls back to mailto:) and who
+    may sign up -- `first_run` while the server has no account at all."""
 
     user: UserItem | None = None
     smtp_ready: bool = False
+    registration: Literal["first_run", "open", "invite", "closed"] = "open"
 
 
 # ── Sharing ──────────────────────────────────────────────────────────

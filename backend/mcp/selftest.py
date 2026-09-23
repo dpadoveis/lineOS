@@ -91,7 +91,7 @@ def protocol_checks(env: dict) -> None:
             "clientInfo": {"name": "selftest", "version": "1.0"},
         })
         assert info["protocolVersion"] == "2025-06-18", info
-        assert info["serverInfo"]["name"] == "flow-editor", info
+        assert info["serverInfo"]["name"] == "lineos", info
         assert "tools" in info["capabilities"], info
         step("initialize negotiates and announces the tools capability")
 
@@ -299,10 +299,11 @@ def main() -> int:
     read_only_check(env)
     if env.get("FLOW_MCP_EMAIL") and env.get("FLOW_MCP_PASSWORD"):
         target = env.get("FLOW_MCP_BASE_URL", "")
-        # The round trip creates and deletes real flows. 8010 is the production
-        # API of this host (docker-compose.yml), so it takes a deliberate opt-in.
+        # The round trip creates and deletes real flows. 8010 is where the
+        # stack's own API listens (docker-compose.yml), so it takes a deliberate
+        # opt-in.
         if (not target or ":8010" in target) and not os.environ.get("FLOW_MCP_ALLOW_PROD"):
-            print("round trip skipped: FLOW_MCP_BASE_URL points at the production API "
+            print("round trip skipped: FLOW_MCP_BASE_URL points at the stack's API "
                   "(:8010). Start the disposable one from e2e/README.md, or set "
                   "FLOW_MCP_ALLOW_PROD=1 to insist.", file=sys.stderr)
             print("\nok")

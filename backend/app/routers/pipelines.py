@@ -13,8 +13,9 @@ from sqlalchemy.orm import Session
 import psycopg
 from pydantic import BaseModel
 
-from .. import access, health as health_rules, service, service_ops, erp_source
+from .. import access, health as health_rules, service, service_ops, dataset_source
 from .. import dataset_detail as dd
+from ..config import settings
 from ..database import get_db
 from ..models import PERMISSION_RANK, User, FlowVersion
 from ..models_ops import InventoryObject, ObjectCheck, ObjectRun, Pipeline, PipelineBinding
@@ -267,6 +268,9 @@ def delete_pipeline(
     user: User | None = Depends(access.current_user_optional),
     token: str | None = Depends(access.share_token_header),
 ) -> Response:
+    """Deletes a lineage, for good as far as anyone can tell: the row stays with
+    `archived_at` set (its slug is not reused), but its bindings are removed, so
+    there is nothing to restore. The UI confirms it as irreversible."""
     pipeline = _require(db, slug, user, "full", token)
     pipeline.archived_at = datetime.now(timezone.utc)
     db.execute(
@@ -411,13 +415,13 @@ def _bound_table(db: Session, slug: str, user: User | None, object_id: int, mini
 
 
 def _on_source(fn):
-    """Runs fn(conn) on the ERP source, mapping its failures to HTTP errors."""
+    """Runs fn(conn) on the dataset source, mapping its failures to HTTP errors."""
     try:
-        with erp_source.connect() as conn:
+        with dataset_source.connect() as conn:
             return fn(conn)
     except dd.BadRequest as exc:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc))
-    except erp_source.SourceUnavailable as exc:
+    except dataset_source.SourceUnavailable as exc:
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, str(exc))
     except psycopg.errors.QueryCanceled:
         raise HTTPException(status.HTTP_504_GATEWAY_TIMEOUT, "the query took longer than 15 s")
@@ -443,7 +447,8 @@ def read_preview(slug: str, object_id: int, limit: int = 50, order_by: str | Non
     limit = max(1, min(100, limit))
     direction = "asc" if dir == "asc" else "desc"
     return PreviewOut(**_on_source(lambda c: dd.preview(
-        c, schema, table, binding.rules or {}, order_by, direction, f, limit)))
+        c, schema, table, binding.rules or {}, order_by, direction, f, limit,
+        settings.dataset_source_order_column)))
 
 
 @router.get("/{slug}/objects/{object_id}/stats", response_model=StatsOut)

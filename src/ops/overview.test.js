@@ -11,7 +11,7 @@ const view = {
     N('b2', 'no_data', 'bronze.stg_b', { lastCheck: { row_count: 500 } }),
     N('j', 'broken', 'dag_silver', { lastRun: { started_at: '2026-09-22T02:00:00Z' } }),
     N('s', 'ok', 'silver.table_a', { lastCheck: { row_count: 19456 } }),
-    N('g', 'ok', 'gold.table_a')
+    N('g', 'ok', 'gold.table_b')
   ],
   edges: [{ id: '1', source: 'b1', target: 'j' }, { id: '2', source: 'b2', target: 'j' },
     { id: '3', source: 'j', target: 's' }, { id: '4', source: 's', target: 'g' }]

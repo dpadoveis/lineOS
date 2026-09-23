@@ -280,22 +280,22 @@ def share_by_email(
     db.commit()
 
     url = _share_url(flow, token, data.base_url)
-    niveis = {"view": "view it", "edit": "view and edit it", "full": "edit and share it"}
-    corpo = (
-        f"{me.name} shared the diagram \"{flow.name}\" with you on Flow Editor.\n\n"
+    levels = {"view": "view it", "edit": "view and edit it", "full": "edit and share it"}
+    body = (
+        f"{me.name} shared the diagram \"{flow.name}\" with you on lineOS.\n\n"
         f"{('Message: ' + data.message) if data.message else ''}"
         f"\n\nOpen it here:\n{url}\n\n"
-        f"This link lets you {niveis.get(data.permission, 'view it')}. "
+        f"This link lets you {levels.get(data.permission, 'view it')}. "
         "Anyone holding it gets the same access, so pass it on carefully.\n"
     )
-    assunto = f'"{flow.name}" was shared with you'
+    subject = f'"{flow.name}" was shared with you'
 
     mailto = (
-        f"mailto:{quote(data.to)}?subject={quote(assunto)}&body={quote(corpo)}"
+        f"mailto:{quote(data.to)}?subject={quote(subject)}&body={quote(body)}"
     )
     if not mailer.configured():
         # 200 with sent=false: the client falls back to `mailto`, which is a
         # working path, not an error.
         return ShareEmailResult(sent=False, to=data.to, url=url, mailto=mailto)
-    mailer.send(data.to, assunto, corpo)
+    mailer.send(data.to, subject, body)
     return ShareEmailResult(sent=True, to=data.to, url=url, mailto=mailto)

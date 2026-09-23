@@ -6,17 +6,18 @@ import PromoteDiagramModal from './PromoteDiagramModal.jsx';
 import NewPipelineModal from './NewPipelineModal.jsx';
 import { goFlow, goNew, goLineage, goPipeline } from './route.js';
 import HealthBadge from '../ops/HealthBadge.jsx';
+import Brand from './Brand.jsx';
 
-const quando = (iso) => {
+const timeAgo = (iso) => {
   if (!iso) return '—';
   const d = new Date(iso);
-  const minutos = Math.round((Date.now() - d.getTime()) / 60000);
-  if (minutos < 1) return 'just now';
-  if (minutos < 60) return minutos + ' min ago';
-  const horas = Math.round(minutos / 60);
-  if (horas < 24) return horas + 'h ago';
-  const dias = Math.round(horas / 24);
-  if (dias < 7) return dias + 'd ago';
+  const minutes = Math.round((Date.now() - d.getTime()) / 60000);
+  if (minutes < 1) return 'just now';
+  if (minutes < 60) return minutes + ' min ago';
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return hours + 'h ago';
+  const days = Math.round(hours / 24);
+  if (days < 7) return days + 'd ago';
   return d.toLocaleDateString();
 };
 
@@ -29,27 +30,27 @@ const ROTULO = { view: 'view only', edit: 'can edit', full: 'full control' };
 export default function Home({ user, onSignOut, themeIcon, onToggleTheme, view = 'diagrams' }) {
   const [items, setItens] = useState([]);
   const [lineageData, setLineageData] = useState(null);
-  const [carregando, setCarregando] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [busca, setBusca] = useState('');
-  // Menu da conta (troca de senha, sair) e o modal que ele abre.
+  const [query, setQuery] = useState('');
+  // Account menu (change password, sign out) and the modal it opens.
   const [menu, setMenu] = useState(false);
-  const [trocandoSenha, setTrocandoSenha] = useState(false);
-  const [aviso, setAviso] = useState(null);
-  const contaRef = useRef(null);
-  // Menu "New ▾" e o modal de promoção de diagrama
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [notice, setNotice] = useState(null);
+  const accountRef = useRef(null);
+  // The "New ▾" menu and the promote-a-diagram modal.
   const [newMenu, setNewMenu] = useState(false);
   const [promovendo, setPromovendo] = useState(false);
-  const [criandoPipeline, setCriandoPipeline] = useState(false);
+  const [creatingPipeline, setCreatingPipeline] = useState(false);
   const newRef = useRef(null);
   // Deletion confirmation modal
   const [deletingPipeline, setDeletingPipeline] = useState(null);
 
   useEffect(() => {
     if (!menu) return undefined;
-    // Fecha por clique fora, como os outros dropdowns do projeto.
+    // Closes on an outside click, like the project's other dropdowns.
     const aoClicar = (e) => {
-      if (contaRef.current && !contaRef.current.contains(e.target)) setMenu(false);
+      if (accountRef.current && !accountRef.current.contains(e.target)) setMenu(false);
     };
     document.addEventListener('mousedown', aoClicar);
     return () => document.removeEventListener('mousedown', aoClicar);
@@ -64,19 +65,19 @@ export default function Home({ user, onSignOut, themeIcon, onToggleTheme, view =
     return () => document.removeEventListener('mousedown', aoClicar);
   }, [newMenu]);
 
-  const carregar = useCallback(async (q) => {
-    setCarregando(true);
+  const load = useCallback(async (q) => {
+    setLoading(true);
     try {
       setItens(await api.listFlows(q, false));
       setError(null);
     } catch (err) {
       setError((err && err.message) || 'could not load your diagrams');
     }
-    setCarregando(false);
+    setLoading(false);
   }, []);
 
-  const carregarLineage = useCallback(async () => {
-    setCarregando(true);
+  const loadLineage = useCallback(async () => {
+    setLoading(true);
     try {
       const data = await opsApi.listPipelines();
       setLineageData(data);
@@ -84,21 +85,21 @@ export default function Home({ user, onSignOut, themeIcon, onToggleTheme, view =
     } catch (err) {
       setError((err && err.message) || 'could not load lineage');
     }
-    setCarregando(false);
+    setLoading(false);
   }, []);
 
   useEffect(() => {
-    // Debounce da busca: cada tecla dispararia um GET numa API com teto de CPU.
-    const t = setTimeout(() => carregar(busca), busca ? 250 : 0);
+    // Debounce da query: cada tecla dispararia um GET numa API com teto de CPU.
+    const t = setTimeout(() => load(query), query ? 250 : 0);
     return () => clearTimeout(t);
-  }, [busca, carregar]);
+  }, [query, load]);
 
   useEffect(() => {
     if (view === 'lineage') {
       let alive = true;
-      carregarLineage().then(() => {
+      loadLineage().then(() => {
         if (alive) {
-          const timer = setInterval(carregarLineage, 30000);
+          const timer = setInterval(loadLineage, 30000);
           return () => clearInterval(timer);
         }
       });
@@ -106,47 +107,43 @@ export default function Home({ user, onSignOut, themeIcon, onToggleTheme, view =
         alive = false;
       };
     }
-  }, [view, carregarLineage]);
+  }, [view, loadLineage]);
 
-  async function remover(f) {
+  async function remove(f) {
     if (!window.confirm('Move "' + f.name + '" to the trash?')) return;
     try {
       await api.deleteFlow(f.id, false);
-      carregar(busca);
+      load(query);
     } catch (err) {
       setError((err && err.message) || 'could not move it to the trash');
     }
   }
 
-  async function renomear(f) {
+  async function rename(f) {
     const name = window.prompt('Flow name', f.name);
     if (name === null || !name.trim()) return;
     try {
       await api.renameFlow(f.id, { name: name.trim() });
-      carregar(busca);
+      load(query);
     } catch (err) {
       setError((err && err.message) || 'could not rename it');
     }
   }
 
-  const meus = items.filter((f) => f.is_owner);
-  const comigo = items.filter((f) => !f.is_owner);
+  const mine = items.filter((f) => f.is_owner);
+  const sharedWithMe = items.filter((f) => !f.is_owner);
 
   return (
     <div className="fe-home">
       <header className="fe-home-head">
         <div className="fe-home-brand">
-          <div className="fe-logo">◇</div>
-          <div className="fe-title-block">
-            <span className="fe-title">Flow Editor</span>
-            <span className="fe-subtitle">CARTESIAN PLANE</span>
-          </div>
+          <Brand subtitle="DESIGN · BUILD · OBSERVE" />
         </div>
         <div className="fe-spacer" />
         <button className="fe-icon-toggle" title="Toggle light / dark" onClick={onToggleTheme}>
           {themeIcon}
         </button>
-        <div className="fe-account-anchor" ref={contaRef}>
+        <div className="fe-account-anchor" ref={accountRef}>
           <button
             className={'fe-home-user' + (menu ? ' fe-home-user-on' : '')}
             title={user.email}
@@ -166,7 +163,7 @@ export default function Home({ user, onSignOut, themeIcon, onToggleTheme, view =
                 className="fe-menu-item"
                 onClick={() => {
                   setMenu(false);
-                  setTrocandoSenha(true);
+                  setChangingPassword(true);
                 }}
               >
                 <span className="fe-menu-item-title">Change password</span>
@@ -188,7 +185,7 @@ export default function Home({ user, onSignOut, themeIcon, onToggleTheme, view =
               <button
                 className={'fe-home-tab' + (view === 'diagrams' ? ' fe-home-tab--active' : '')}
                 onClick={() => {
-                  setBusca('');
+                  setQuery('');
                   goFlow(null);
                 }}
               >
@@ -254,7 +251,7 @@ export default function Home({ user, onSignOut, themeIcon, onToggleTheme, view =
                       className="fe-dropdown-item"
                       onClick={() => {
                         setNewMenu(false);
-                        setCriandoPipeline(true);
+                        setCreatingPipeline(true);
                       }}
                     >
                       New lineage…
@@ -269,45 +266,45 @@ export default function Home({ user, onSignOut, themeIcon, onToggleTheme, view =
         {view === 'diagrams' && (
           <input
             className="fe-home-search"
-            value={busca}
+            value={query}
             placeholder="search by name or description…"
-            onChange={(e) => setBusca(e.target.value)}
+            onChange={(e) => setQuery(e.target.value)}
           />
         )}
 
         {error && <div className="fe-modal-error">{error}</div>}
-        {aviso && <div className="fe-home-notice">{aviso}</div>}
+        {notice && <div className="fe-home-notice">{notice}</div>}
 
         {view === 'diagrams' && (
           <>
-            {carregando && <div className="fe-home-empty">loading…</div>}
+            {loading && <div className="fe-home-empty">loading…</div>}
 
-            {!carregando && !items.length && (
+            {!loading && !items.length && (
               <div className="fe-home-empty">
-                {busca
-                  ? 'no diagram matches "' + busca + '"'
+                {query
+                  ? 'no diagram matches "' + query + '"'
                   : 'Nothing here yet — create your first diagram.'}
               </div>
             )}
 
-            {!carregando && !!meus.length && (
-              <Secao titulo="Created by you" items={meus} onAbrir={goFlow} onRenomear={renomear} onRemover={remover} />
+            {!loading && !!mine.length && (
+              <Section title="Created by you" items={mine} onOpen={goFlow} onRename={rename} onRemove={remove} />
             )}
-            {!carregando && !!comigo.length && (
-              <Secao titulo="Shared with you" items={comigo} onAbrir={goFlow} />
+            {!loading && !!sharedWithMe.length && (
+              <Section title="Shared with you" items={sharedWithMe} onOpen={goFlow} />
             )}
           </>
         )}
 
         {view === 'lineage' && (
           <>
-            {carregando && <div className="fe-home-empty">loading…</div>}
+            {loading && <div className="fe-home-empty">loading…</div>}
 
-            {!carregando && !lineageData?.items.length && (
+            {!loading && !lineageData?.items.length && (
               <div className="fe-home-empty">No diagram has been promoted yet.</div>
             )}
 
-            {!carregando && !!lineageData?.items.length && (
+            {!loading && !!lineageData?.items.length && (
               <section className="fe-home-section">
                 <h2 className="fe-home-section-title">
                   Active
@@ -358,13 +355,13 @@ export default function Home({ user, onSignOut, themeIcon, onToggleTheme, view =
         )}
       </div>
 
-      {trocandoSenha && (
+      {changingPassword && (
         <PasswordModal
-          onCancel={() => setTrocandoSenha(false)}
+          onCancel={() => setChangingPassword(false)}
           onSubmit={async (atual, nova) => {
             await api.changePassword(atual, nova);
-            setTrocandoSenha(false);
-            setAviso('Password changed. Every other session was signed out.');
+            setChangingPassword(false);
+            setNotice('Password changed. Every other session was signed out.');
           }}
         />
       )}
@@ -380,11 +377,11 @@ export default function Home({ user, onSignOut, themeIcon, onToggleTheme, view =
         />
       )}
 
-      {criandoPipeline && (
+      {creatingPipeline && (
         <NewPipelineModal
-          onCancel={() => setCriandoPipeline(false)}
+          onCancel={() => setCreatingPipeline(false)}
           onCreated={(slug) => {
-            setCriandoPipeline(false);
+            setCreatingPipeline(false);
             goPipeline(slug);
           }}
         />
@@ -394,7 +391,10 @@ export default function Home({ user, onSignOut, themeIcon, onToggleTheme, view =
         <div className="fe-modal-overlay" onClick={() => setDeletingPipeline(null)}>
           <div className="fe-modal" onClick={(e) => e.stopPropagation()}>
             <h2>Delete "{deletingPipeline.name}"?</h2>
-            <p>The diagram itself is kept. Only this monitoring setup is removed.</p>
+            <p>
+              The diagram itself is kept. This lineage and every binding to its jobs and tables are
+              removed, and cannot be restored — promoting the diagram again starts unbound.
+            </p>
             <div className="fe-modal-actions">
               <button className="fe-btn" onClick={() => setDeletingPipeline(null)}>
                 Cancel
@@ -405,7 +405,7 @@ export default function Home({ user, onSignOut, themeIcon, onToggleTheme, view =
                   try {
                     await opsApi.deletePipeline(deletingPipeline.slug);
                     setDeletingPipeline(null);
-                    carregarLineage();
+                    loadLineage();
                   } catch (err) {
                     setError((err && err.message) || 'could not delete lineage');
                     setDeletingPipeline(null);
@@ -422,17 +422,17 @@ export default function Home({ user, onSignOut, themeIcon, onToggleTheme, view =
   );
 }
 
-function Secao({ titulo, items, onAbrir, onRenomear, onRemover }) {
+function Section({ title, items, onOpen, onRename, onRemove }) {
   return (
     <section className="fe-home-section">
       <h2 className="fe-home-section-title">
-        {titulo}
+        {title}
         <span className="fe-home-count">{items.length}</span>
       </h2>
       <div className="fe-home-grid">
         {items.map((f) => (
           <article key={f.id} className="fe-card">
-            <button className="fe-card-main" onClick={() => onAbrir(f.slug || f.id)}>
+            <button className="fe-card-main" onClick={() => onOpen(f.slug || f.id)}>
               <span className="fe-card-name">
                 {f.name}
                 {f.has_draft && (
@@ -446,7 +446,7 @@ function Secao({ titulo, items, onAbrir, onRenomear, onRemover }) {
               </span>
               {f.description && <span className="fe-card-desc">{f.description}</span>}
               <span className="fe-card-foot">
-                <span className="fe-card-when">{quando(f.updated_at)}</span>
+                <span className="fe-card-when">{timeAgo(f.updated_at)}</span>
                 {!f.is_owner && f.owner_name && (
                   <span className="fe-card-owner">by {f.owner_name}</span>
                 )}
@@ -458,18 +458,18 @@ function Secao({ titulo, items, onAbrir, onRenomear, onRemover }) {
                 <span className={'fe-perm fe-perm-' + f.permission}>{ROTULO[f.permission]}</span>
               </span>
             </button>
-            {(onRenomear || onRemover) && (
+            {(onRename || onRemove) && (
               <div className="fe-card-actions">
-                {onRenomear && (
-                  <button className="fe-mini-btn" title="Rename" onClick={() => onRenomear(f)}>
+                {onRename && (
+                  <button className="fe-mini-btn" title="Rename" onClick={() => onRename(f)}>
                     ✎
                   </button>
                 )}
-                {onRemover && (
+                {onRemove && (
                   <button
                     className="fe-mini-btn fe-mini-danger"
                     title="Move to the trash"
-                    onClick={() => onRemover(f)}
+                    onClick={() => onRemove(f)}
                   >
                     🗑
                   </button>

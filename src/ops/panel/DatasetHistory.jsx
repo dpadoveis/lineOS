@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { readHistory } from '../api.js';
-import { seriesPath } from '../dataset.js';
 
 const CHART_HEIGHT = 200;
 const CHART_WIDTH = 600;
@@ -90,9 +89,13 @@ export default function DatasetHistory({ slug, objectId }) {
     return { ...p, x, y };
   });
 
-  // Path for line series
-  const pathData = seriesPath(points, innerWidth, innerHeight);
-  const pathD = pathData ? `M ${PADDING} ${CHART_HEIGHT - PADDING - ((validPoints[0].row_count - minCount) / range) * innerHeight} ${pathData.substring(1)}` : '';
+  // Path for line series: through the same coordinates as the dots, skipping
+  // the checks that brought no row count.
+  const pathD = coords
+    .filter((p) => p.row_count !== null && p.row_count !== undefined)
+    .sort((a, b) => a.x - b.x)
+    .map((p, i) => (i ? 'L' : 'M') + ' ' + p.x.toFixed(1) + ' ' + p.y.toFixed(1))
+    .join(' ');
 
   // Format date for x-axis label
   const formatDate = (date) => {
@@ -140,7 +143,7 @@ export default function DatasetHistory({ slug, objectId }) {
         })}
 
         {/* Line series */}
-        {pathD && <polyline d={pathD} stroke="#e8c26a" strokeWidth="1.5" fill="none" />}
+        {pathD && <path d={pathD} style={{ stroke: 'var(--accent)' }} strokeWidth="1.5" fill="none" />}
 
         {/* Error dots */}
         {coords.map((p, idx) => {

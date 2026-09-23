@@ -1,9 +1,11 @@
 """Sign up, sign in, sign out.
 
-Registration is open: this is a small tool on a private tailnet, and gating it
-behind an invite would only mean creating accounts by hand. The session is an
-httpOnly cookie holding an opaque token -- no JWT, nothing readable by page
-scripts, and revoking it is a DELETE on one row.
+Who may sign up is `settings.registration` (open, invite or closed); the first
+account on a server always may, and becomes its admin -- that is the first-run
+setup. Under "invite", the invitation is a live share link: whoever received a
+diagram by link or by email can create an account, nobody else can. The
+session is an httpOnly cookie holding an opaque token -- no JWT, nothing
+readable by page scripts, and revoking it is a DELETE on one row.
 """
 import logging
 
@@ -23,6 +25,21 @@ logger = logging.getLogger("flow.auth")
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
+def registration_state(db: Session) -> str:
+    """`first_run` while the server has no account, else the configured policy."""
+    if db.execute(select(User.id).limit(1)).first() is None:
+        return "first_run"
+    return settings.registration
+
+
+def _session_info(db: Session, user: User | None) -> SessionInfo:
+    return SessionInfo(
+        user=UserItem.model_validate(user) if user else None,
+        smtp_ready=mailer.configured(),
+        registration=registration_state(db),
+    )
+
+
 def _set_cookie(response: Response, token: str) -> None:
     response.set_cookie(
         settings.session_cookie,
@@ -37,12 +54,26 @@ def _set_cookie(response: Response, token: str) -> None:
 
 @router.post("/register", response_model=SessionInfo, status_code=status.HTTP_201_CREATED)
 def register(data: RegisterRequest, response: Response, db: Session = Depends(get_db)):
+    policy = registration_state(db)
+    if policy == "closed":
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "registration is closed on this server")
+    if policy == "invite" and access.live_link(db, data.invite) is None:
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            "registration needs an invitation -- open a diagram someone shared with you first",
+        )
+
     email = data.email.strip().lower()
     existing = db.execute(select(User).where(func.lower(User.email) == email)).first()
     if existing is not None:
         raise HTTPException(status.HTTP_409_CONFLICT, "an account with this email already exists")
 
-    user = User(email=email, name=data.name.strip(), password_hash=hash_password(data.password))
+    user = User(
+        email=email,
+        name=data.name.strip(),
+        password_hash=hash_password(data.password),
+        is_admin=policy == "first_run",
+    )
     db.add(user)
     db.flush()
 
@@ -57,7 +88,7 @@ def register(data: RegisterRequest, response: Response, db: Session = Depends(ge
     db.commit()
     db.refresh(user)
     _set_cookie(response, token)
-    return SessionInfo(user=UserItem.model_validate(user), smtp_ready=mailer.configured())
+    return _session_info(db, user)
 
 
 @router.post("/login", response_model=SessionInfo)
@@ -72,7 +103,7 @@ def login(data: LoginRequest, response: Response, db: Session = Depends(get_db))
     db.commit()
     db.refresh(user)
     _set_cookie(response, token)
-    return SessionInfo(user=UserItem.model_validate(user), smtp_ready=mailer.configured())
+    return _session_info(db, user)
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
@@ -108,13 +139,11 @@ def change_password(
     db.commit()
     db.refresh(user)
     _set_cookie(response, token)
-    return SessionInfo(user=UserItem.model_validate(user), smtp_ready=mailer.configured())
+    return _session_info(db, user)
 
 
 @router.get("/me", response_model=SessionInfo)
-def me(user: User | None = Depends(access.current_user_optional)):
+def me(db: Session = Depends(get_db), user: User | None = Depends(access.current_user_optional)):
     """Called on boot. Answers 200 with `user: null` when nobody is signed in --
     not 401, because "no session yet" is the normal first visit."""
-    return SessionInfo(
-        user=UserItem.model_validate(user) if user else None, smtp_ready=mailer.configured()
-    )
+    return _session_info(db, user)

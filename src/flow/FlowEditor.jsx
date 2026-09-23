@@ -203,9 +203,9 @@ export default function FlowEditor({ flowRef, session, smtpReady, onHome }) {
         onSavePng={fe.savePng}
         onSaveJson={fe.saveJson}
         onCopyJson={fe.copyJson}
-        onGravarVersao={() => fe.saveVersion()}
-        onGravarComoNovo={() => fe.saveAsNew()}
-        onEnviarPng={fe.uploadPng}
+        onSaveVersion={() => fe.saveVersion()}
+        onSaveAsNew={() => fe.saveAsNew()}
+        onUploadPng={fe.uploadPng}
         actionsOpen={actionsOpen}
         onToggleActions={fe.toggleActions}
         onImportJson={fe.importJson}
@@ -232,9 +232,9 @@ export default function FlowEditor({ flowRef, session, smtpReady, onHome }) {
           onCopyLink: fe.copyShareLink,
           onSendEmail: fe.sendShareEmail
         }}
-        onAbrirBiblioteca={fe.openLibrary}
-        onNovoFluxo={fe.newFlow}
-        onRenomear={() => fe.renameFlow()}
+        onOpenLibrary={fe.openLibrary}
+        onNewFlow={fe.newFlow}
+        onRename={() => fe.renameFlow()}
         historyOpen={versions.open}
         onToggleHistory={fe.toggleHistory}
         history={{
@@ -274,15 +274,15 @@ export default function FlowEditor({ flowRef, session, smtpReady, onHome }) {
         {library.open && (
           <FlowLibrary
             library={library}
-            abertoId={flow ? flow.id : null}
-            onFechar={fe.closeLibrary}
-            onBuscar={fe.searchLibrary}
-            onAlternarLixeira={fe.toggleTrash}
-            onAbrir={fe.openFlow}
-            onNovo={fe.newFlow}
-            onRenomear={fe.renameFlow}
-            onRemover={fe.deleteFlow}
-            onRestaurar={fe.restoreFlow}
+            openId={flow ? flow.id : null}
+            onClose={fe.closeLibrary}
+            onSearch={fe.searchLibrary}
+            onToggleTrash={fe.toggleTrash}
+            onOpen={fe.openFlow}
+            onNew={fe.newFlow}
+            onRename={fe.renameFlow}
+            onRemove={fe.deleteFlow}
+            onRestore={fe.restoreFlow}
           />
         )}
 

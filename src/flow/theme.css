@@ -39,6 +39,30 @@ input:focus, textarea:focus { outline: none; }
   --danger: #e07a6a;
 }
 
+/* ---------- brand ----------
+   lineOS's identity: the amber of the gold layer, plus the bronze and silver
+   that climb to it in the mark (src/app/Brand.jsx). --accent fills and draws
+   lines (the port, the mark, an active underline); --accent-ink is the same
+   amber as text or a thin outline, darkened in the light theme so it still
+   reads on white. The canvas and the PNG export cannot read these, so
+   ACCENT in src/flow/constants.js mirrors --accent. */
+:root, [data-theme="dark"] {
+  --accent: #e8c26a;
+  --accent-hi: #f5d896;
+  --accent-ink: #e8c26a;
+  --on-accent: #101317;
+  --layer-bronze: #c08a5a;
+  --layer-silver: #a4adb8;
+  --layer-gold: #e8c26a;
+}
+
+[data-theme="light"] {
+  --accent-ink: #8f783f;
+  --layer-bronze: #9a6a3e;
+  --layer-silver: #6d7681;
+  --layer-gold: #8f783f;
+}
+
 [data-theme="light"] {
   --bg: #f3f4f6;
   --panel: #ffffff;

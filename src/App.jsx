@@ -2,6 +2,7 @@ import { Suspense, lazy, useEffect, useState } from 'react';
 import FlowEditor from './flow/FlowEditor.jsx';
 import * as api from './flow/api.js';
 import AuthScreen from './app/AuthScreen.jsx';
+import { LogoMark } from './app/Brand.jsx';
 import Home from './app/Home.jsx';
 import { applyTheme, storedTheme } from './app/theme.js';
 import { goHome, useRoute } from './app/route.js';
@@ -60,8 +61,8 @@ export default function App() {
     };
   }, [route.view, route.token]);
 
-  const alternarTema = () => setTheme(applyTheme(theme === 'light' ? 'dark' : 'light'));
-  const iconeTema = theme === 'light' ? '☾' : '☀';
+  const toggleTheme = () => setTheme(applyTheme(theme === 'light' ? 'dark' : 'light'));
+  const themeIcon = theme === 'light' ? '☾' : '☀';
 
   if (session.loading) return <Splash text="loading…" />;
 
@@ -101,10 +102,12 @@ export default function App() {
   if (!session.user) {
     return (
       <AuthScreen
+        registration={session.registration}
+        hasInvite={api.hasInvite()}
         onSignIn={session.signIn}
         onSignUp={session.signUp}
-        themeIcon={iconeTema}
-        onToggleTheme={alternarTema}
+        themeIcon={themeIcon}
+        onToggleTheme={toggleTheme}
       />
     );
   }
@@ -133,8 +136,8 @@ export default function App() {
     <Home
       user={session.user}
       onSignOut={session.signOut}
-      themeIcon={iconeTema}
-      onToggleTheme={alternarTema}
+      themeIcon={themeIcon}
+      onToggleTheme={toggleTheme}
       view={route.viewProp || 'diagrams'}
     />
   );
@@ -143,7 +146,7 @@ export default function App() {
 function Splash({ text, action }) {
   return (
     <div className="fe-splash">
-      <div className="fe-logo">◇</div>
+      <LogoMark size={36} />
       <span className="fe-splash-text">{text}</span>
       {action && (
         <button className="fe-btn" onClick={action.onClick}>

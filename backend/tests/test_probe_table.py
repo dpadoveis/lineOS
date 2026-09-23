@@ -1,6 +1,7 @@
 """The table probe, against the test Postgres."""
 import os
 import sys
+from datetime import timezone
 from pathlib import Path
 
 import pytest
@@ -17,6 +18,17 @@ from app.database import engine  # noqa: E402
 def dsn():
     """The SQLAlchemy URL turned into something psycopg2 accepts."""
     return os.environ["DATABASE_URL_TEST"].replace("postgresql+psycopg://", "postgresql://")
+
+
+# The docker-exec mode needs a running container that reaches the test
+# database: PROBE_TEST_CONTAINER names it, and PROBE_TEST_DB_USER / _DB_NAME /
+# _DB_PASSWORD say how to sign in. Without it, the tests that must reach a real
+# table skip; the ones that fail before any I/O still run.
+CONTAINER = os.environ.get("PROBE_TEST_CONTAINER", "")
+DB_USER = os.environ.get("PROBE_TEST_DB_USER", "postgres")
+DB_NAME = os.environ.get("PROBE_TEST_DB_NAME", "flows_test")
+DB_PASSWORD = os.environ.get("PROBE_TEST_DB_PASSWORD", "")
+needs_container = pytest.mark.skipif(not CONTAINER, reason="set PROBE_TEST_CONTAINER to run")
 
 
 @pytest.fixture
@@ -44,7 +56,8 @@ def test_it_counts_rows_and_reads_the_watermark(probe_table):
     got = check_table(dsn(), settings.db_schema, probe_table, freshness_column="updated_at")
     assert got.ok is True
     assert got.row_count == 2
-    assert got.max_ts.hour == 2
+    # The session's time zone is the server's, so compare in UTC.
+    assert got.max_ts.astimezone(timezone.utc).hour == 2
 
 
 def test_without_a_freshness_column_it_only_counts(probe_table):
@@ -71,6 +84,7 @@ def test_the_session_is_read_only(probe_table):
         ).scalar() == 2
 
 
+@needs_container
 def test_container_mode_reads_table(probe_table):
     """Via docker exec, read row count and freshness column."""
     got = check_table(
@@ -78,14 +92,14 @@ def test_container_mode_reads_table(probe_table):
         settings.db_schema,
         probe_table,
         freshness_column="updated_at",
-        container="flowops-postgres",
-        user="flow",
-        db="flows",
-        password=os.environ["FLOW_DB_PASSWORD"],
+        container=CONTAINER or "no-such-container",
+        user=DB_USER,
+        db=DB_NAME,
+        password=DB_PASSWORD,
     )
     assert got.ok is True
     assert got.row_count == 2
-    assert got.max_ts.hour == 2
+    assert got.max_ts.astimezone(timezone.utc).hour == 2
 
 
 def test_container_mode_rejects_invalid_identifier():
@@ -95,10 +109,10 @@ def test_container_mode_rejects_invalid_identifier():
         settings.db_schema,
         'test"; DROP TABLE "anything',
         freshness_column="col",
-        container="flowops-postgres",
-        user="flow",
-        db="flows",
-        password=os.environ["FLOW_DB_PASSWORD"],
+        container=CONTAINER or "no-such-container",
+        user=DB_USER,
+        db=DB_NAME,
+        password=DB_PASSWORD,
     )
     assert got.ok is False
     assert "invalid identifier" in got.error
@@ -111,21 +125,22 @@ def test_container_mode_handles_missing_container():
         settings.db_schema,
         "any_table",
         container="no-such-container",
-        user="flow",
-        db="flows",
-        password=os.environ["FLOW_DB_PASSWORD"],
+        user=DB_USER,
+        db=DB_NAME,
+        password=DB_PASSWORD,
     )
     assert got.ok is False
     assert got.error is not None
 
 
+@needs_container
 def test_discover_tables_finds_tables_in_schema(probe_table):
     """Discover tables returns Discovered objects with correct structure."""
     found = discover_tables(
-        "flowops-postgres",
-        "flow",
-        "flows",
-        os.environ["FLOW_DB_PASSWORD"],
+        CONTAINER or "no-such-container",
+        DB_USER,
+        DB_NAME,
+        DB_PASSWORD,
         [settings.db_schema],
         "test_source",
     )
@@ -145,10 +160,10 @@ def test_discover_tables_finds_tables_in_schema(probe_table):
 def test_discover_tables_rejects_invalid_schema_without_hitting_db():
     """Invalid schema name returns empty list without reaching database."""
     found = discover_tables(
-        "flowops-postgres",
-        "flow",
-        "flows",
-        os.environ["FLOW_DB_PASSWORD"],
+        CONTAINER or "no-such-container",
+        DB_USER,
+        DB_NAME,
+        DB_PASSWORD,
         ["x; DROP TABLE y"],
         "test_source",
     )
@@ -159,9 +174,9 @@ def test_discover_tables_handles_missing_container():
     """Missing container returns empty list, not an exception."""
     found = discover_tables(
         "no-such-container",
-        "flow",
-        "flows",
-        os.environ["FLOW_DB_PASSWORD"],
+        DB_USER,
+        DB_NAME,
+        DB_PASSWORD,
         ["public"],
         "test_source",
     )

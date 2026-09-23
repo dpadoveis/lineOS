@@ -4,9 +4,21 @@ Design, build and monitor data pipelines in one place: draw the pipeline, hand
 the design to an AI to build it, and watch the lineage and health of what was
 built.
 
-> **Early and unstable.** This repository was just extracted from a working
-> deployment and is being made environment-independent — some things are broken
-> on purpose until then. The plan is in [`docs/ROADMAP.md`](docs/ROADMAP.md).
+> **Early.** lineOS runs on any machine with Docker (stage 0 of
+> [`docs/ROADMAP.md`](docs/ROADMAP.md)); ingestion from any environment, the
+> buildable node contract and the AI build handoff are the stages ahead.
+
+## Quick start
+
+```bash
+git clone https://github.com/dpadoveis/lineOS && cd lineOS
+cp .env.example .env    # set FLOW_DB_PASSWORD
+docker compose up -d
+```
+
+Open <http://localhost:8020> and create the admin account. Settings, a reverse
+proxy, a subpath and the Data Lineage sources are in
+[`docs/DEPLOY.md`](docs/DEPLOY.md).
 
 ## Credits
 
@@ -31,17 +43,17 @@ Frontend in React + Vite (from the prototype created in Claude Design, kept in
 [`design/`](design/)) and backend in Python (FastAPI) with a Postgres of its own
 in a container.
 
-## Running
+## Developing
 
 Backend (Postgres + API in Docker):
 
 ```bash
 cp .env.example .env          # set FLOW_DB_PASSWORD
-docker compose up -d --build  # postgres :5433 · api :8010
+docker compose up -d --build  # postgres :5433 · api :8010 · frontend :8020
 curl localhost:8010/api/health
 ```
 
-Frontend (Vite; it reaches the API through the `/api` proxy):
+Frontend with hot reload (Vite; it reaches the API through the `/api` proxy):
 
 ```bash
 npm install
@@ -49,18 +61,21 @@ npm run dev      # http://localhost:5173
 ```
 
 ```bash
+npm test         # unit tests (Vitest)
 npm run build    # production bundle in dist/
 npm run preview  # serves the build
 ```
 
-End-to-end coverage of accounts and sharing (Playwright, through the shared
-`~/tools/browser-test` environment). **It really registers and really saves**,
-so it runs against a disposable API, never the production one — the steps are in
-[`e2e/README.md`](e2e/README.md).
+Backend tests need a Postgres: see *Tests* in [`AGENT.md`](AGENT.md). CI runs
+everything on each push. End-to-end coverage of accounts and sharing
+(Playwright) **really registers and really saves**, so it runs against a
+disposable API — the steps are in [`e2e/README.md`](e2e/README.md).
 
-**The application opens on the sign-up/sign-in screen**: diagrams belong to
-accounts. The first registration on this server adopts the flows created before
-accounts existed, so nothing already there is lost.
+**The application opens on the sign-in screen**: diagrams belong to accounts.
+On a server with no account yet it opens on **Set up lineOS**, and the account
+created there is the admin (it also adopts any flow created before accounts
+existed). Who may sign up after that is `FLOW_REGISTRATION` — `invite` by
+default: a share link is the invitation.
 
 Deployment is in [`docs/DEPLOY.md`](docs/DEPLOY.md). Details of the API, the schema and the
 resource limits are in [`docs/BACKEND.md`](docs/BACKEND.md); the project's
@@ -70,7 +85,7 @@ general context is in [`AGENT.md`](AGENT.md).
 
 ### Accounts and sharing
 
-- **Sign-up and sign-in** (email + password). Registration is open; the password becomes a PBKDF2-SHA256 hash and the session is an `httpOnly` cookie holding an opaque token — the database keeps only its sha256.
+- **Sign-up and sign-in** (email + password). The first account is the admin; after it, registration is `invite` (a share link is the invitation), `open` or `closed`. The password becomes a PBKDF2-SHA256 hash and the session is an `httpOnly` cookie holding an opaque token — the database keeps only its sha256.
 - **Password change** in the account menu (top-right of the home): it asks for the current password and signs every other session out. There is no "forgot my password" — whoever loses theirs needs an operator reset (`docs/BACKEND.md` §8.1).
 - **Homepage**: on entering, that account's diagrams, newest first, split between *Created by you* and *Shared with you*, with search, rename and a trash. Opening a diagram is navigation (`#/flow/<slug>`), so the browser's Back button works.
 - **Diagrams belong to an account.** Only the owner and the people they invited see each one.
@@ -191,8 +206,9 @@ backend/mcp/                the MCP server (stdio, standard library only)
 └── selftest.py             drives the server over stdio, like a client
 
 docker/
-├── frontend.Dockerfile     the SPA build + the nginx serving it under /flow-editor/
-└── frontend-nginx.conf     the static SPA and the /flow-editor/api/ proxy
+├── frontend.Dockerfile           the SPA build + the nginx serving it (LINEOS_BASE: / or a subpath)
+├── frontend-nginx.conf.template  the static SPA, the /api proxy and the sign-in rate limit
+└── lineos-base.envsh             derives the nginx locations from LINEOS_BASE at startup
 ```
 
 The document is serialised by the same `payload.js` used for the file export, so

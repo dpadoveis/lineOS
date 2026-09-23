@@ -2,7 +2,7 @@
 //
 // The API always sits at `<SPA base>/api`, so the same build works at the root
 // (dev, through the Vite proxy) and under the subpath published by nginx
-// (/flow-editor/api, served by the frontend container's nginx).
+// (<subpath>/api, served by the frontend container's nginx).
 // VITE_API_BASE overrides it, in case the API lives on another origin.
 const BASE =
   import.meta.env.VITE_API_BASE ||
@@ -34,12 +34,18 @@ export class ApiError extends Error {
 // It travels on every request: it is what grants access to someone who is
 // neither owner nor invited -- including someone with no account at all.
 let shareToken = null;
+// The last link token this tab opened. Unlike shareToken it survives leaving
+// the shared view: it is the invitation a sign-up carries when the server
+// only lets invited people in (REGISTRATION=invite).
+let inviteToken = null;
 
 export function setShareToken(token) {
   shareToken = token || null;
+  if (token) inviteToken = token;
 }
 
 export const getShareToken = () => shareToken;
+export const hasInvite = () => !!inviteToken;
 
 async function request(path, options = {}) {
   const headers = { ...(options.headers || {}) };
@@ -81,10 +87,10 @@ const json = (method, body) => ({
   body: JSON.stringify(body)
 });
 
-export const listFlows = (q, removidos) => {
+export const listFlows = (q, trashed) => {
   const p = new URLSearchParams();
   if (q) p.set('q', q);
-  if (removidos) p.set('removidos', 'true');
+  if (trashed) p.set('trashed', 'true');
   const qs = p.toString();
   return request('/flows' + (qs ? '?' + qs : ''));
 };
@@ -109,8 +115,8 @@ export const openVersion = (id, number) => request('/flows/' + id + '/versions/'
 export const restoreVersion = (id, number) =>
   request('/flows/' + id + '/versions/' + number + '/restore', { method: 'POST' });
 
-export const deleteFlow = (id, purgar) =>
-  request('/flows/' + id + (purgar ? '?purge=true' : ''), { method: 'DELETE' });
+export const deleteFlow = (id, purge) =>
+  request('/flows/' + id + (purge ? '?purge=true' : ''), { method: 'DELETE' });
 
 export const restoreFlow = (id) => request('/flows/' + id + '/restore', { method: 'POST' });
 
@@ -150,7 +156,7 @@ export const toolUsage = (slug, names) => {
 // ── Accounts ─────────────────────────────────────────────────────────
 
 export const register = (name, email, password) =>
-  request('/auth/register', json('POST', { name, email, password }));
+  request('/auth/register', json('POST', { name, email, password, invite: inviteToken }));
 
 export const login = (email, password) => request('/auth/login', json('POST', { email, password }));
 

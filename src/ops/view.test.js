@@ -168,7 +168,7 @@ describe('matches', () => {
   const n = { label: 'Silver DAG', externalId: 'dag_silver_a' };
   it('is case-insensitive over label and external id', () => {
     expect(matches(n, 'silver')).toBe(true);
-    expect(matches(n, 'TABLE_A')).toBe(true);
+    expect(matches(n, 'DAG_SILVER')).toBe(true);
     expect(matches(n, 'gold')).toBe(false);
   });
   it('an empty query matches everything', () => {
@@ -225,7 +225,7 @@ describe('node attrs, expected and durationMedianMs', () => {
   });
 });
 
-describe('the real map (fixture)', () => {
+describe('the sample map (fixture)', () => {
   const v = toPipelineView(fixture);
 
   it('has no binding nested inside a binding -- the level the first screen got wrong', () => {

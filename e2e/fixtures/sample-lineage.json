@@ -1,0 +1,809 @@
+{
+  "id": 1,
+  "slug": "sample-lineage",
+  "name": "Sample lineage",
+  "flow_slug": "sample-flow",
+  "flow_version": 3,
+  "state": "broken",
+  "collected_age_s": 120,
+  "nodes": [
+    {
+      "uid": "u-ingest",
+      "title": "Daily ingestion",
+      "name": "Airflow",
+      "category": "ORCHESTRATION",
+      "binding": {
+        "node_uid": "u-ingest",
+        "object": {
+          "id": 101,
+          "kind": "airflow_dag",
+          "source": "airflow:local",
+          "external_id": "dag_ingest",
+          "display_name": "dag_ingest",
+          "attrs": {
+            "schedule": "0 2 * * *"
+          },
+          "first_seen_at": "2026-09-22T00:00:00Z",
+          "last_seen_at": "2026-09-22T12:00:00Z",
+          "watchers": 1
+        },
+        "rules": {},
+        "health": {
+          "state": "ok",
+          "reason": "last run succeeded",
+          "since": "2026-09-22T06:00:00Z"
+        },
+        "last_run": {
+          "run_key": "run-02",
+          "started_at": "2026-09-22T02:00:00Z",
+          "ended_at": "2026-09-22T02:04:00Z",
+          "outcome": "success",
+          "exit_code": 0,
+          "duration_ms": 240000,
+          "facts": {}
+        },
+        "last_check": null,
+        "expected": {
+          "next_at": "2026-09-23T02:00:00Z",
+          "late_after": "2026-09-23T03:00:00Z"
+        },
+        "duration_median_ms": 230000
+      }
+    },
+    {
+      "uid": "u-orders-raw",
+      "title": "Orders (raw)",
+      "name": "Postgres",
+      "category": "STORAGE",
+      "binding": {
+        "node_uid": "u-orders-raw",
+        "object": {
+          "id": 102,
+          "kind": "table",
+          "source": "warehouse",
+          "external_id": "bronze.orders_raw",
+          "display_name": "bronze.orders_raw",
+          "attrs": {},
+          "first_seen_at": "2026-09-22T00:00:00Z",
+          "last_seen_at": "2026-09-22T12:00:00Z",
+          "watchers": 1
+        },
+        "rules": {},
+        "health": {
+          "state": "ok",
+          "reason": "fresh",
+          "since": "2026-09-22T06:00:00Z"
+        },
+        "last_run": null,
+        "last_check": {
+          "checked_at": "2026-09-22T06:00:00Z",
+          "row_count": 18250,
+          "max_ts": "2026-09-22T05:00:00Z",
+          "ok": true,
+          "error": null
+        },
+        "expected": null,
+        "duration_median_ms": null
+      }
+    },
+    {
+      "uid": "u-customers-raw",
+      "title": "Customers (raw)",
+      "name": "Postgres",
+      "category": "STORAGE",
+      "binding": {
+        "node_uid": "u-customers-raw",
+        "object": {
+          "id": 103,
+          "kind": "table",
+          "source": "warehouse",
+          "external_id": "bronze.customers_raw",
+          "display_name": "bronze.customers_raw",
+          "attrs": {},
+          "first_seen_at": "2026-09-22T00:00:00Z",
+          "last_seen_at": "2026-09-22T12:00:00Z",
+          "watchers": 1
+        },
+        "rules": {},
+        "health": {
+          "state": "late",
+          "reason": "no new rows since yesterday",
+          "since": "2026-09-22T06:00:00Z"
+        },
+        "last_run": null,
+        "last_check": {
+          "checked_at": "2026-09-22T06:00:00Z",
+          "row_count": 4120,
+          "max_ts": "2026-09-22T05:00:00Z",
+          "ok": true,
+          "error": null
+        },
+        "expected": null,
+        "duration_median_ms": null
+      }
+    },
+    {
+      "uid": "u-events-raw",
+      "title": "Events (raw)",
+      "name": "Postgres",
+      "category": "STORAGE",
+      "binding": {
+        "node_uid": "u-events-raw",
+        "object": {
+          "id": 104,
+          "kind": "table",
+          "source": "warehouse",
+          "external_id": "bronze.events_raw",
+          "display_name": "bronze.events_raw",
+          "attrs": {},
+          "first_seen_at": "2026-09-22T00:00:00Z",
+          "last_seen_at": "2026-09-22T12:00:00Z",
+          "watchers": 1
+        },
+        "rules": {},
+        "health": null,
+        "last_run": null,
+        "last_check": null,
+        "expected": null,
+        "duration_median_ms": null
+      }
+    },
+    {
+      "uid": "u-transform",
+      "title": "Transform",
+      "name": "Airflow",
+      "category": "ORCHESTRATION",
+      "binding": {
+        "node_uid": "u-transform",
+        "object": {
+          "id": 105,
+          "kind": "airflow_dag",
+          "source": "airflow:local",
+          "external_id": "dag_transform",
+          "display_name": "dag_transform",
+          "attrs": {},
+          "first_seen_at": "2026-09-22T00:00:00Z",
+          "last_seen_at": "2026-09-22T12:00:00Z",
+          "watchers": 1
+        },
+        "rules": {},
+        "health": {
+          "state": "broken",
+          "reason": "last run failed",
+          "since": "2026-09-22T06:00:00Z"
+        },
+        "last_run": {
+          "run_key": "run-03",
+          "started_at": "2026-09-22T03:00:00Z",
+          "ended_at": "2026-09-22T03:04:00Z",
+          "outcome": "failed",
+          "exit_code": 1,
+          "duration_ms": 240000,
+          "facts": {}
+        },
+        "last_check": null,
+        "expected": null,
+        "duration_median_ms": null
+      }
+    },
+    {
+      "uid": "u-orders",
+      "title": "Orders",
+      "name": "Postgres",
+      "category": "STORAGE",
+      "binding": {
+        "node_uid": "u-orders",
+        "object": {
+          "id": 106,
+          "kind": "table",
+          "source": "warehouse",
+          "external_id": "silver.orders",
+          "display_name": "silver.orders",
+          "attrs": {},
+          "first_seen_at": "2026-09-22T00:00:00Z",
+          "last_seen_at": "2026-09-22T12:00:00Z",
+          "watchers": 1
+        },
+        "rules": {},
+        "health": {
+          "state": "ok",
+          "reason": "fresh",
+          "since": "2026-09-22T06:00:00Z"
+        },
+        "last_run": null,
+        "last_check": {
+          "checked_at": "2026-09-22T06:00:00Z",
+          "row_count": 17990,
+          "max_ts": "2026-09-22T05:00:00Z",
+          "ok": true,
+          "error": null
+        },
+        "expected": null,
+        "duration_median_ms": null
+      }
+    },
+    {
+      "uid": "u-customers",
+      "title": "Customers",
+      "name": "Postgres",
+      "category": "STORAGE",
+      "binding": {
+        "node_uid": "u-customers",
+        "object": {
+          "id": 107,
+          "kind": "table",
+          "source": "warehouse",
+          "external_id": "silver.customers",
+          "display_name": "silver.customers",
+          "attrs": {},
+          "first_seen_at": "2026-09-22T00:00:00Z",
+          "last_seen_at": "2026-09-22T12:00:00Z",
+          "watchers": 1
+        },
+        "rules": {},
+        "health": {
+          "state": "broken",
+          "reason": "check failed",
+          "since": "2026-09-22T06:00:00Z"
+        },
+        "last_run": null,
+        "last_check": {
+          "checked_at": "2026-09-22T06:00:00Z",
+          "row_count": null,
+          "max_ts": "2026-09-22T05:00:00Z",
+          "ok": false,
+          "error": "relation does not exist"
+        },
+        "expected": null,
+        "duration_median_ms": null
+      }
+    },
+    {
+      "uid": "u-export",
+      "title": "Nightly export",
+      "name": "Cron",
+      "category": "SCHEDULER",
+      "binding": {
+        "node_uid": "u-export",
+        "object": {
+          "id": 108,
+          "kind": "cron_job",
+          "source": "host:local",
+          "external_id": "job_export",
+          "display_name": "job_export",
+          "attrs": {
+            "schedule": "30 4 * * *"
+          },
+          "first_seen_at": "2026-09-22T00:00:00Z",
+          "last_seen_at": "2026-09-22T12:00:00Z",
+          "watchers": 1
+        },
+        "rules": {},
+        "health": {
+          "state": "skipped",
+          "reason": "last run skipped",
+          "since": "2026-09-22T06:00:00Z"
+        },
+        "last_run": {
+          "run_key": "run-04",
+          "started_at": "2026-09-22T04:00:00Z",
+          "ended_at": "2026-09-22T04:04:00Z",
+          "outcome": "skipped",
+          "exit_code": 0,
+          "duration_ms": 240000,
+          "facts": {}
+        },
+        "last_check": null,
+        "expected": null,
+        "duration_median_ms": null
+      }
+    },
+    {
+      "uid": "u-events",
+      "title": "Events",
+      "name": "Postgres",
+      "category": "STORAGE",
+      "binding": {
+        "node_uid": "u-events",
+        "object": {
+          "id": 109,
+          "kind": "table",
+          "source": "warehouse",
+          "external_id": "silver.events",
+          "display_name": "silver.events",
+          "attrs": {},
+          "first_seen_at": "2026-09-22T00:00:00Z",
+          "last_seen_at": "2026-09-22T12:00:00Z",
+          "watchers": 1
+        },
+        "rules": {},
+        "health": {
+          "state": "no_data",
+          "reason": "never checked",
+          "since": "2026-09-22T06:00:00Z"
+        },
+        "last_run": null,
+        "last_check": null,
+        "expected": null,
+        "duration_median_ms": null
+      }
+    },
+    {
+      "uid": "u-revenue",
+      "title": "Revenue by day",
+      "name": "Postgres",
+      "category": "STORAGE",
+      "binding": {
+        "node_uid": "u-revenue",
+        "object": {
+          "id": 110,
+          "kind": "table",
+          "source": "warehouse",
+          "external_id": "gold.revenue_daily",
+          "display_name": "gold.revenue_daily",
+          "attrs": {},
+          "first_seen_at": "2026-09-22T00:00:00Z",
+          "last_seen_at": "2026-09-22T12:00:00Z",
+          "watchers": 1
+        },
+        "rules": {},
+        "health": {
+          "state": "ok",
+          "reason": "fresh",
+          "since": "2026-09-22T06:00:00Z"
+        },
+        "last_run": null,
+        "last_check": {
+          "checked_at": "2026-09-22T06:00:00Z",
+          "row_count": 365,
+          "max_ts": "2026-09-22T05:00:00Z",
+          "ok": true,
+          "error": null
+        },
+        "expected": null,
+        "duration_median_ms": null
+      }
+    },
+    {
+      "uid": "u-ltv",
+      "title": "Customer LTV",
+      "name": "Postgres",
+      "category": "STORAGE",
+      "binding": {
+        "node_uid": "u-ltv",
+        "object": {
+          "id": 111,
+          "kind": "table",
+          "source": "warehouse",
+          "external_id": "gold.customer_ltv",
+          "display_name": "gold.customer_ltv",
+          "attrs": {},
+          "first_seen_at": "2026-09-22T00:00:00Z",
+          "last_seen_at": "2026-09-22T12:00:00Z",
+          "watchers": 1
+        },
+        "rules": {},
+        "health": {
+          "state": "late",
+          "reason": "expected by 06:00",
+          "since": "2026-09-22T06:00:00Z"
+        },
+        "last_run": null,
+        "last_check": {
+          "checked_at": "2026-09-22T06:00:00Z",
+          "row_count": 4100,
+          "max_ts": "2026-09-22T05:00:00Z",
+          "ok": true,
+          "error": null
+        },
+        "expected": null,
+        "duration_median_ms": null
+      }
+    },
+    {
+      "uid": "u-cleanup",
+      "title": "Cleanup",
+      "name": "Cron",
+      "category": "SCHEDULER",
+      "binding": {
+        "node_uid": "u-cleanup",
+        "object": {
+          "id": 112,
+          "kind": "cron_job",
+          "source": "host:local",
+          "external_id": "job_cleanup",
+          "display_name": "job_cleanup",
+          "attrs": {},
+          "first_seen_at": "2026-09-22T00:00:00Z",
+          "last_seen_at": "2026-09-22T12:00:00Z",
+          "watchers": 1
+        },
+        "rules": {},
+        "health": {
+          "state": "ok",
+          "reason": "last run succeeded",
+          "since": "2026-09-22T06:00:00Z"
+        },
+        "last_run": {
+          "run_key": "run-05",
+          "started_at": "2026-09-22T05:00:00Z",
+          "ended_at": "2026-09-22T05:04:00Z",
+          "outcome": "success",
+          "exit_code": 0,
+          "duration_ms": 240000,
+          "facts": {}
+        },
+        "last_check": null,
+        "expected": null,
+        "duration_median_ms": null
+      }
+    },
+    {
+      "uid": "u-report",
+      "title": "Monthly report",
+      "name": "Metabase",
+      "category": "BI",
+      "binding": null
+    }
+  ],
+  "orphaned_bindings": [
+    {
+      "node_uid": "u-dropped",
+      "object": {
+        "id": 113,
+        "kind": "table",
+        "source": "warehouse",
+        "external_id": "bronze.legacy_orders",
+        "display_name": "bronze.legacy_orders",
+        "attrs": {},
+        "first_seen_at": "2026-09-22T00:00:00Z",
+        "last_seen_at": "2026-09-22T12:00:00Z",
+        "watchers": 1
+      }
+    }
+  ],
+  "graph": {
+    "kind": "flow-graph",
+    "version": 1,
+    "nodes": [
+      {
+        "id": 1,
+        "uid": "u-ingest",
+        "name": "Airflow",
+        "label": "Daily ingestion",
+        "category": "ORCHESTRATION",
+        "initials": "AF",
+        "color": "#7dd3a0",
+        "x": 0,
+        "y": 0,
+        "width": null,
+        "height": null,
+        "description": null,
+        "metadata": {},
+        "tool": null,
+        "group": null
+      },
+      {
+        "id": 2,
+        "uid": "u-orders-raw",
+        "name": "Postgres",
+        "label": "Orders (raw)",
+        "category": "STORAGE",
+        "initials": "PG",
+        "color": "#6fb8d3",
+        "x": 288,
+        "y": 0,
+        "width": null,
+        "height": null,
+        "description": null,
+        "metadata": {},
+        "tool": null,
+        "group": null
+      },
+      {
+        "id": 3,
+        "uid": "u-customers-raw",
+        "name": "Postgres",
+        "label": "Customers (raw)",
+        "category": "STORAGE",
+        "initials": "PG",
+        "color": "#6fb8d3",
+        "x": 576,
+        "y": 0,
+        "width": null,
+        "height": null,
+        "description": null,
+        "metadata": {},
+        "tool": null,
+        "group": null
+      },
+      {
+        "id": 4,
+        "uid": "u-events-raw",
+        "name": "Postgres",
+        "label": "Events (raw)",
+        "category": "STORAGE",
+        "initials": "PG",
+        "color": "#6fb8d3",
+        "x": 864,
+        "y": 0,
+        "width": null,
+        "height": null,
+        "description": null,
+        "metadata": {},
+        "tool": null,
+        "group": null
+      },
+      {
+        "id": 5,
+        "uid": "u-transform",
+        "name": "Airflow",
+        "label": "Transform",
+        "category": "ORCHESTRATION",
+        "initials": "AF",
+        "color": "#7dd3a0",
+        "x": 0,
+        "y": -192,
+        "width": null,
+        "height": null,
+        "description": null,
+        "metadata": {},
+        "tool": null,
+        "group": null
+      },
+      {
+        "id": 6,
+        "uid": "u-orders",
+        "name": "Postgres",
+        "label": "Orders",
+        "category": "STORAGE",
+        "initials": "PG",
+        "color": "#6fb8d3",
+        "x": 288,
+        "y": -192,
+        "width": null,
+        "height": null,
+        "description": null,
+        "metadata": {},
+        "tool": null,
+        "group": null
+      },
+      {
+        "id": 7,
+        "uid": "u-customers",
+        "name": "Postgres",
+        "label": "Customers",
+        "category": "STORAGE",
+        "initials": "PG",
+        "color": "#6fb8d3",
+        "x": 576,
+        "y": -192,
+        "width": null,
+        "height": null,
+        "description": null,
+        "metadata": {},
+        "tool": null,
+        "group": null
+      },
+      {
+        "id": 8,
+        "uid": "u-export",
+        "name": "Cron",
+        "label": "Nightly export",
+        "category": "SCHEDULER",
+        "initials": "CR",
+        "color": "#9aa4b0",
+        "x": 864,
+        "y": -192,
+        "width": null,
+        "height": null,
+        "description": null,
+        "metadata": {},
+        "tool": null,
+        "group": null
+      },
+      {
+        "id": 9,
+        "uid": "u-events",
+        "name": "Postgres",
+        "label": "Events",
+        "category": "STORAGE",
+        "initials": "PG",
+        "color": "#6fb8d3",
+        "x": 0,
+        "y": -384,
+        "width": null,
+        "height": null,
+        "description": null,
+        "metadata": {},
+        "tool": null,
+        "group": null
+      },
+      {
+        "id": 10,
+        "uid": "u-revenue",
+        "name": "Postgres",
+        "label": "Revenue by day",
+        "category": "STORAGE",
+        "initials": "PG",
+        "color": "#e8c26a",
+        "x": 288,
+        "y": -384,
+        "width": null,
+        "height": null,
+        "description": null,
+        "metadata": {},
+        "tool": null,
+        "group": null
+      },
+      {
+        "id": 11,
+        "uid": "u-ltv",
+        "name": "Postgres",
+        "label": "Customer LTV",
+        "category": "STORAGE",
+        "initials": "PG",
+        "color": "#e8c26a",
+        "x": 576,
+        "y": -384,
+        "width": null,
+        "height": null,
+        "description": null,
+        "metadata": {},
+        "tool": null,
+        "group": null
+      },
+      {
+        "id": 12,
+        "uid": "u-cleanup",
+        "name": "Cron",
+        "label": "Cleanup",
+        "category": "SCHEDULER",
+        "initials": "CR",
+        "color": "#9aa4b0",
+        "x": 864,
+        "y": -384,
+        "width": null,
+        "height": null,
+        "description": null,
+        "metadata": {},
+        "tool": null,
+        "group": null
+      },
+      {
+        "id": 13,
+        "uid": "u-report",
+        "name": "Metabase",
+        "label": "Monthly report",
+        "category": "BI",
+        "initials": "MB",
+        "color": "#a78bd8",
+        "x": 0,
+        "y": -576,
+        "width": null,
+        "height": null,
+        "description": null,
+        "metadata": {},
+        "tool": null,
+        "group": null
+      },
+      {
+        "id": 99,
+        "uid": "u-ghost",
+        "name": "Postgres",
+        "label": "Removed table",
+        "category": "STORAGE",
+        "initials": "PG",
+        "color": "#6fb8d3",
+        "x": 0,
+        "y": -800,
+        "width": null,
+        "height": null,
+        "description": null,
+        "metadata": {},
+        "tool": null,
+        "group": null
+      }
+    ],
+    "edges": [
+      {
+        "id": 1,
+        "from": 1,
+        "to": 2,
+        "label": null
+      },
+      {
+        "id": 2,
+        "from": 1,
+        "to": 3,
+        "label": null
+      },
+      {
+        "id": 3,
+        "from": 1,
+        "to": 4,
+        "label": null
+      },
+      {
+        "id": 4,
+        "from": 2,
+        "to": 5,
+        "label": null
+      },
+      {
+        "id": 5,
+        "from": 3,
+        "to": 5,
+        "label": null
+      },
+      {
+        "id": 6,
+        "from": 4,
+        "to": 5,
+        "label": null
+      },
+      {
+        "id": 7,
+        "from": 5,
+        "to": 6,
+        "label": null
+      },
+      {
+        "id": 8,
+        "from": 5,
+        "to": 7,
+        "label": null
+      },
+      {
+        "id": 9,
+        "from": 5,
+        "to": 9,
+        "label": null
+      },
+      {
+        "id": 10,
+        "from": 6,
+        "to": 8,
+        "label": null
+      },
+      {
+        "id": 11,
+        "from": 8,
+        "to": 10,
+        "label": null
+      },
+      {
+        "id": 12,
+        "from": 7,
+        "to": 8,
+        "label": null
+      },
+      {
+        "id": 13,
+        "from": 8,
+        "to": 11,
+        "label": null
+      },
+      {
+        "id": 14,
+        "from": 10,
+        "to": 13,
+        "label": null
+      },
+      {
+        "id": 15,
+        "from": 9,
+        "to": 12,
+        "label": null
+      },
+      {
+        "id": 16,
+        "from": 12,
+        "to": 99,
+        "label": null
+      }
+    ],
+    "groups": []
+  },
+  "pending_edges": 1
+}

@@ -53,7 +53,7 @@
 .ops-tab--active {
   background: var(--card);
   color: var(--txt);
-  border-top: 2px solid #e8c26a;
+  border-top: 2px solid var(--accent);
   padding-top: 4px;
 }
 
@@ -234,7 +234,7 @@
 .ops-reset-sort-btn {
   background: none;
   border: 0;
-  color: #e8c26a;
+  color: var(--accent-ink);
   cursor: pointer;
   font: 600 11px 'IBM Plex Mono', monospace;
   padding: 0;
@@ -263,7 +263,7 @@
 .ops-breadcrumb-link {
   background: none;
   border: 0;
-  color: #e8c26a;
+  color: var(--accent-ink);
   cursor: pointer;
   font: inherit;
   padding: 0;
@@ -421,7 +421,7 @@
 .ops-node-lineage-link {
   background: none;
   border: 0;
-  color: #e8c26a;
+  color: var(--accent-ink);
   cursor: pointer;
   font: 400 11px 'IBM Plex Sans', sans-serif;
   text-align: left;
@@ -519,14 +519,13 @@
 }
 .ops-chip b { font: 600 10.5px 'IBM Plex Mono', monospace; color: var(--mut); }
 .ops-chip:hover { background: var(--btnh); border-color: var(--edge2); }
-.ops-chip--on { border-color: #e8c26a; color: var(--txt); background: var(--btnh); }
+.ops-chip--on { border-color: var(--accent); color: var(--txt); background: var(--btnh); }
 .ops-chip--on b { color: var(--txt); }
-[data-theme="light"] .ops-chip--on { border-color: #8f783f; }
+[data-theme="light"] .ops-chip--on { border-color: var(--accent-ink); }
 .ops-chip--layer { text-transform: capitalize; }
-.ops-chip--layer[data-layer="bronze"] { color: #c08a5a; }
-.ops-chip--layer[data-layer="silver"] { color: #a4adb8; }
-.ops-chip--layer[data-layer="gold"] { color: #e8c26a; }
-[data-theme="light"] .ops-chip--layer[data-layer="gold"] { color: #8f783f; }
+.ops-chip--layer[data-layer="bronze"] { color: var(--layer-bronze); }
+.ops-chip--layer[data-layer="silver"] { color: var(--layer-silver); }
+.ops-chip--layer[data-layer="gold"] { color: var(--layer-gold); }
 .ops-chip .ops-dot { width: 6px; height: 6px; }
 .ops-chip--clear { color: var(--mut); border-style: dashed; }
 .ops-toolbar-sep { width: 1px; height: 18px; background: var(--line); margin: 0 2px; }
@@ -575,7 +574,7 @@
 
 .ops-dataset-tab--active {
   color: var(--txt);
-  border-bottom: 2px solid #e8c26a;
+  border-bottom: 2px solid var(--accent);
   padding-bottom: 0;
 }
 
@@ -671,7 +670,7 @@
 .ops-dataset-add-filter {
   background: none;
   border: 0;
-  color: #e8c26a;
+  color: var(--accent-ink);
   cursor: pointer;
   font: 400 11px 'IBM Plex Sans', sans-serif;
   padding: 4px 0;
@@ -690,7 +689,7 @@
 .ops-dataset-apply {
   height: 24px;
   padding: 0 12px;
-  background: #e8c26a;
+  background: var(--accent);
   border: 0;
   border-radius: 4px;
   color: var(--bg);
@@ -816,7 +815,7 @@
 
 .ops-job-tab--active {
   color: var(--txt);
-  border-bottom: 2px solid #e8c26a;
+  border-bottom: 2px solid var(--accent);
   padding-bottom: 4px;
 }
 
@@ -1078,7 +1077,7 @@
 .ops-job-io-link {
   background: none;
   border: 0;
-  color: #e8c26a;
+  color: var(--accent-ink);
   cursor: pointer;
   font: inherit;
   text-align: left;

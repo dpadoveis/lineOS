@@ -35,6 +35,14 @@ Order: **0 → 1 → 2 → 3 → 4.** Stage 0 is mostly cleanup and can run alon
 
 ## Stage 0 — Make it run anywhere (rebrand + cleanup)
 
+**Status (2026-09-23):** done in code — B1–B6, the rebrand (name, identity,
+English identifiers), `REGISTRATION` with a first-run admin, the compose file
+with its own Postgres and the opt-in lineage override, the `/` subpath, CI and
+the repo hygiene files. Open: the first CI run on GitHub (it is the only place
+the Docker half is exercised end to end), wiring or retiring `e2e/` (0.4 — its
+specs predate the first-run screen), and whether to rename the `FLOW_*`
+variables to `LINEOS_*` (kept, to avoid breaking existing `.env` files).
+
 ### 0.1 Bugs introduced by the extraction (fix first)
 
 | # | Problem | Fix | Done when |

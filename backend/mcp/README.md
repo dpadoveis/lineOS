@@ -1,6 +1,6 @@
 # MCP server
 
-Exposes the Editor de Fluxo to an MCP client — Claude Code, Claude Desktop, any
+Exposes the lineOS editor to an MCP client — Claude Code, Claude Desktop, any
 other — so an agent can list, read, build and version the diagrams of one
 account, in that account's name.
 
@@ -62,7 +62,7 @@ absolute paths:
 ```json
 {
   "mcpServers": {
-    "flow-editor": {
+    "lineos": {
       "command": "python3",
       "args": ["/path/to/lineOS/backend/mcp/server.py"]
     }
@@ -144,22 +144,16 @@ read-only mode — needs no server and runs anywhere.
 
 The round trip half **writes for real**: it creates a flow, versions it,
 restores it and deletes it permanently. It only runs with credentials set, and
-it refuses a `:8010` target unless `FLOW_MCP_ALLOW_PROD=1`, because that is the
-production API of this host. Use a disposable one, as `e2e/README.md` does:
+it refuses a `:8010` target unless `FLOW_MCP_ALLOW_PROD=1`, because that is
+where your stack's API listens by default. Use a disposable one — start it as
+`e2e/README.md` shows, then:
 
 ```bash
-docker exec flow-postgres psql -U flow -d postgres -c "CREATE DATABASE flows_mcp OWNER flow"
-docker run -d --rm --name flow-api-mcp --network flow-net -p 127.0.0.1:8011:8000 \
-  -e DATABASE_URL="postgresql+psycopg://flow:$(grep FLOW_DB_PASSWORD .env | cut -d= -f2)@postgres:5432/flows_mcp" \
-  -e DB_SCHEMA=flow flow-editor-api
-
 curl -s -X POST http://127.0.0.1:8011/api/auth/register -H 'Content-Type: application/json' \
-  -d '{"name":"MCP Selftest","email":"mcp@teste.local","password":"selftest-1234"}'
+  -d '{"name":"MCP Selftest","email":"mcp@test.local","password":"selftest-1234"}'
 
-FLOW_MCP_BASE_URL=http://127.0.0.1:8011 FLOW_MCP_EMAIL=mcp@teste.local \
+FLOW_MCP_BASE_URL=http://127.0.0.1:8011 FLOW_MCP_EMAIL=mcp@test.local \
 FLOW_MCP_PASSWORD=selftest-1234 python3 backend/mcp/selftest.py
-
-docker rm -f flow-api-mcp
 ```
 
 ## Worth knowing

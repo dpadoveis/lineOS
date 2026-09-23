@@ -63,14 +63,14 @@ export function useLineageShare(flowSlug, lineageSlug) {
   const shareUrl = (token, slug) =>
     window.location.origin + window.location.pathname.replace(/\/#.*/, '') + '#/share/' + encodeURIComponent(token) + (slug ? '/lineage/' + encodeURIComponent(slug) : '');
 
-  const onShareUser = async (email, permission, pronto) => {
+  const onShareUser = async (email, permission, onDone) => {
     if (!flowRef.current) return;
     setLoading(true);
     setError(null);
     setNotice(null);
     try {
       const s = await api.shareWithUser(flowRef.current.id, email, permission);
-      if (pronto) pronto();
+      if (onDone) onDone();
       setNotice(s.name + ' now has access (' + s.permission + ')');
       loadShare();
     } catch (err) {

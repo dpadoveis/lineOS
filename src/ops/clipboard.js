@@ -1,6 +1,6 @@
 // Copying text to the clipboard on a plain-HTTP origin. navigator.clipboard
-// exists only in secure contexts (HTTPS or localhost), and the ops stack is
-// served over http://<tailnet-ip>, so the async API is simply absent there.
+// exists only in secure contexts (HTTPS or localhost), and lineOS is often
+// served over plain HTTP on a private network, where the async API is absent.
 // The fallback is the classic hidden textarea + execCommand('copy'), which
 // still works while the click that started the action counts as recent.
 export async function copyText(text) {

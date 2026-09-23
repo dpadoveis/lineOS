@@ -27,7 +27,7 @@ export default function HistoryMenu({
   onRemoveAsset,
   assetUrl
 }) {
-  const { items, arquivos, carregando } = versions;
+  const { items, files, loading } = versions;
   const rootRef = useRef(null);
 
   // Closes on any click outside the dropdown, the way a menu is expected to
@@ -72,10 +72,10 @@ export default function HistoryMenu({
       {flow && (
         <div className="fe-history-body">
           <div className="fe-history-section">VERSIONS</div>
-          {carregando && <div className="fe-panel-empty">loading…</div>}
-          {!carregando && !items.length && <div className="fe-panel-empty">no versions yet</div>}
+          {loading && <div className="fe-panel-empty">loading…</div>}
+          {!loading && !items.length && <div className="fe-panel-empty">no versions yet</div>}
 
-          {!carregando &&
+          {!loading &&
             items.map((v) => (
               <div
                 key={v.version}
@@ -113,10 +113,10 @@ export default function HistoryMenu({
               </div>
             ))}
 
-          {!carregando && !!(arquivos || []).length && (
+          {!loading && !!(files || []).length && (
             <>
               <div className="fe-history-section">ATTACHMENTS</div>
-              {arquivos.map((a) => (
+              {files.map((a) => (
                 <div key={a.id} className="fe-item">
                   <a
                     className="fe-item-main"

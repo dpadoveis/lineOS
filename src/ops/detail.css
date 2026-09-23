@@ -19,7 +19,7 @@
 /* --- the bar: .fe-header plus the counts --- */
 .ops-bar-counts { display: flex; gap: 6px; margin-left: 6px; }
 .ops-count { padding: 5px 9px; font-size: 11.5px; }
-.ops-count--on { border-color: #e8c26a; background: var(--btnh); }
+.ops-count--on { border-color: var(--accent); background: var(--btnh); }
 .ops-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
 .ops-dot--ok { background: #6dddb8; }
 .ops-dot--skipped { background: #8fd5b8; }

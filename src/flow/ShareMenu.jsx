@@ -8,16 +8,16 @@ import { useEffect, useState } from 'react';
 // never implicit: nothing is shared until one is chosen, and `view` is the
 // default everywhere.
 
-const NIVEIS = [
+const LEVELS = [
   { value: 'view', label: 'Can view', hint: 'opens the diagram, changes nothing' },
   { value: 'edit', label: 'Can edit', hint: 'edits and saves versions' },
   { value: 'full', label: 'Full control', hint: 'also shares and deletes it' }
 ];
 
-function Permissao({ value, onChange, id }) {
+function PermissionSelect({ value, onChange, id }) {
   return (
     <select className="fe-select" id={id} value={value} onChange={(e) => onChange(e.target.value)}>
-      {NIVEIS.map((n) => (
+      {LEVELS.map((n) => (
         <option key={n.value} value={n.value}>
           {n.label}
         </option>
@@ -26,7 +26,7 @@ function Permissao({ value, onChange, id }) {
   );
 }
 
-const rotulo = (v) => (NIVEIS.find((n) => n.value === v) || NIVEIS[0]).label;
+const levelLabel = (v) => (LEVELS.find((n) => n.value === v) || LEVELS[0]).label;
 
 export default function ShareMenu({
   flow,
@@ -44,13 +44,13 @@ export default function ShareMenu({
   onCopyLink,
   onSendEmail
 }) {
-  const [tela, setTela] = useState('menu');
+  const [screen, setScreen] = useState('menu');
   const [email, setEmail] = useState('');
-  const [userLevel, setNivelUsuario] = useState('view');
-  const [linkLevel, setNivelLink] = useState('view');
-  const [destino, setDestino] = useState('');
-  const [emailLevel, setNivelEmail] = useState('view');
-  const [message, setMensagem] = useState('');
+  const [userLevel, setUserLevel] = useState('view');
+  const [linkLevel, setLinkLevel] = useState('view');
+  const [recipient, setRecipient] = useState('');
+  const [emailLevel, setEmailLevel] = useState('view');
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
     const aoTeclar = (e) => {
@@ -75,16 +75,16 @@ export default function ShareMenu({
   const links = (state && state.links) || [];
 
   const voltar = (
-    <button className="fe-share-back" onClick={() => setTela('menu')}>
+    <button className="fe-share-back" onClick={() => setScreen('menu')}>
       ← Share options
     </button>
   );
 
   return (
     <div className="fe-share-menu" onMouseDown={(e) => e.stopPropagation()}>
-      {tela === 'menu' && (
+      {screen === 'menu' && (
         <>
-          <button className="fe-menu-item" onClick={() => setTela('user')}>
+          <button className="fe-menu-item" onClick={() => setScreen('user')}>
             <span className="fe-menu-item-title">
               <span className="fe-menu-item-mark">☺</span>Share with a user
             </span>
@@ -92,7 +92,7 @@ export default function ShareMenu({
               {shares.length ? shares.length + ' already have access' : 'by their account email'}
             </span>
           </button>
-          <button className="fe-menu-item" onClick={() => setTela('link')}>
+          <button className="fe-menu-item" onClick={() => setScreen('link')}>
             <span className="fe-menu-item-title">
               <span className="fe-menu-item-mark">⛓</span>Share a link
             </span>
@@ -100,7 +100,7 @@ export default function ShareMenu({
               {links.length ? links.length + ' active link(s)' : 'anyone holding it gets in'}
             </span>
           </button>
-          <button className="fe-menu-item" onClick={() => setTela('email')}>
+          <button className="fe-menu-item" onClick={() => setScreen('email')}>
             <span className="fe-menu-item-title">
               <span className="fe-menu-item-mark">✉</span>Send by email
             </span>
@@ -111,7 +111,7 @@ export default function ShareMenu({
         </>
       )}
 
-      {tela === 'user' && (
+      {screen === 'user' && (
         <div className="fe-share-panel">
           {voltar}
           <form
@@ -132,13 +132,13 @@ export default function ShareMenu({
               />
             </label>
             <div className="fe-share-row">
-              <Permissao value={userLevel} onChange={setNivelUsuario} />
+              <PermissionSelect value={userLevel} onChange={setUserLevel} />
               <button type="submit" className="fe-btn" disabled={!email.trim() || loading}>
                 Share
               </button>
             </div>
             <span className="fe-field-hint">
-              {(NIVEIS.find((n) => n.value === userLevel) || NIVEIS[0]).hint}
+              {(LEVELS.find((n) => n.value === userLevel) || LEVELS[0]).hint}
             </span>
           </form>
 
@@ -150,7 +150,7 @@ export default function ShareMenu({
                   <span className="fe-share-name">{s.name}</span>
                   <span className="fe-share-mail">{s.email}</span>
                 </span>
-                <Permissao value={s.permission} onChange={(v) => onChangePermission(s.id, v)} />
+                <PermissionSelect value={s.permission} onChange={(v) => onChangePermission(s.id, v)} />
                 <button
                   className="fe-mini-btn fe-mini-danger"
                   title="Remove access"
@@ -164,19 +164,19 @@ export default function ShareMenu({
         </div>
       )}
 
-      {tela === 'link' && (
+      {screen === 'link' && (
         <div className="fe-share-panel">
           {voltar}
           <div className="fe-share-form">
             <span className="fe-field-label">New link</span>
             <div className="fe-share-row">
-              <Permissao value={linkLevel} onChange={setNivelLink} />
+              <PermissionSelect value={linkLevel} onChange={setLinkLevel} />
               <button className="fe-btn" disabled={loading} onClick={() => onCreateLink(linkLevel)}>
                 Create &amp; copy
               </button>
             </div>
             <span className="fe-field-hint">
-              Whoever opens the link gets {rotulo(linkLevel).toLowerCase()} — with or without an
+              Whoever opens the link gets {levelLabel(linkLevel).toLowerCase()} — with or without an
               account.
             </span>
           </div>
@@ -186,7 +186,7 @@ export default function ShareMenu({
             {links.map((l) => (
               <div key={l.id} className="fe-share-item">
                 <span className="fe-share-who">
-                  <span className="fe-share-name">{rotulo(l.permission)}</span>
+                  <span className="fe-share-name">{levelLabel(l.permission)}</span>
                   <span className="fe-share-mail">
                     {l.label || 'link'} · {new Date(l.created_at).toLocaleDateString()}
                   </span>
@@ -209,14 +209,14 @@ export default function ShareMenu({
         </div>
       )}
 
-      {tela === 'email' && (
+      {screen === 'email' && (
         <div className="fe-share-panel">
           {voltar}
           <form
             className="fe-share-form"
             onSubmit={(e) => {
               e.preventDefault();
-              if (destino.trim()) onSendEmail(destino.trim(), emailLevel, message.trim());
+              if (recipient.trim()) onSendEmail(recipient.trim(), emailLevel, message.trim());
             }}
           >
             <label className="fe-field">
@@ -224,9 +224,9 @@ export default function ShareMenu({
               <input
                 className="fe-field-input"
                 type="email"
-                value={destino}
+                value={recipient}
                 placeholder="someone@company.com"
-                onChange={(e) => setDestino(e.target.value)}
+                onChange={(e) => setRecipient(e.target.value)}
               />
             </label>
             <label className="fe-field">
@@ -238,19 +238,19 @@ export default function ShareMenu({
                 value={message}
                 maxLength={2000}
                 rows={2}
-                onChange={(e) => setMensagem(e.target.value)}
+                onChange={(e) => setMessage(e.target.value)}
                 placeholder="Have a look at the ingestion layer…"
               />
             </label>
             <div className="fe-share-row">
-              <Permissao value={emailLevel} onChange={setNivelEmail} />
-              <button type="submit" className="fe-btn" disabled={!destino.trim() || loading}>
+              <PermissionSelect value={emailLevel} onChange={setEmailLevel} />
+              <button type="submit" className="fe-btn" disabled={!recipient.trim() || loading}>
                 Send
               </button>
             </div>
             <span className="fe-field-hint">
               {smtpReady
-                ? 'The server sends it with a ' + rotulo(emailLevel).toLowerCase() + ' link.'
+                ? 'The server sends it with a ' + levelLabel(emailLevel).toLowerCase() + ' link.'
                 : 'No SMTP here yet — this opens your own mail client with the link ready.'}
             </span>
           </form>

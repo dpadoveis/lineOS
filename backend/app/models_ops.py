@@ -1,4 +1,4 @@
-"""Pipeline Ops tables: what exists out there, and what somebody is watching.
+"""Data Lineage tables: what exists out there, and what somebody is watching.
 
 Split from models.py deliberately (see docs/superpowers/specs/
 2026-09-18-pipeline-ops-module-design.md §12): this module is additive, so the
@@ -135,9 +135,8 @@ class ObjectCheck(Base):
     )
     row_count: Mapped[int | None] = mapped_column(BigInteger)
     # max(rules.freshness_column). Temporal only in this slice: mirrors that
-    # watermark on a non-temporal column (bronze.stg_table_* advances on
-    # r_e_c_n_o_) get no freshness rule, and take their health from the job
-    # that feeds them.
+    # watermark on a non-temporal column (a row id, say) get no freshness rule,
+    # and take their health from the job that feeds them.
     max_ts: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     ok: Mapped[bool] = mapped_column(Boolean, nullable=False)
     error: Mapped[str | None] = mapped_column(Text)

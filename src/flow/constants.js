@@ -9,7 +9,7 @@ export const NODE_MAX_WIDTH = 720;
 export const NODE_MIN_HEIGHT = 120;
 export const NODE_MAX_HEIGHT = 900;
 export const ACCENT = '#e8c26a';
-export const EDGE_STYLE = 'curva'; // 'curva' | 'reta'
+export const EDGE_STYLE = 'curve'; // 'curve' | 'straight'
 export const SNAP_TO_GRID = true;
 
 // Metadata panel: it hangs BELOW the node card as a dropdown, so it is not part

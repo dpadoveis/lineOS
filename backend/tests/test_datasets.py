@@ -40,12 +40,14 @@ def test_conn():
 
 @pytest.fixture(scope="module", autouse=True)
 def _setup_test_schema(test_conn):
-    """Create the flow_test schema and sample table."""
+    """Create the source schema and its sample tables -- a schema of its own,
+    never the application's: dropping that one on teardown would take every
+    other module's tables along."""
     with test_conn.cursor() as cur:
-        cur.execute("DROP SCHEMA IF EXISTS flow_test CASCADE")
-        cur.execute("CREATE SCHEMA flow_test")
+        cur.execute("DROP SCHEMA IF EXISTS dataset_src CASCADE")
+        cur.execute("CREATE SCHEMA dataset_src")
         cur.execute("""
-            CREATE TABLE flow_test.sample (
+            CREATE TABLE dataset_src.sample (
                 id INT PRIMARY KEY,
                 name TEXT,
                 updated_at TIMESTAMPTZ,
@@ -57,21 +59,23 @@ def _setup_test_schema(test_conn):
             name = "x" * 300 if i == 15 else "50%_off" if i == 20 else None if i == 10 else f"row_{i}"
             payload = b"\x01\x02\x03" if i == 25 else None
             cur.execute(
-                "INSERT INTO flow_test.sample (id, name, updated_at, payload) VALUES (%s, %s, %s, %s)",
+                "INSERT INTO dataset_src.sample (id, name, updated_at, payload) VALUES (%s, %s, %s, %s)",
                 (i, name, datetime(2026, 9, 23, 12, 0, 0, tzinfo=timezone.utc), payload),
             )
+        cur.execute("CREATE TABLE dataset_src.nopk (label TEXT, seen_at TIMESTAMPTZ)")
+        cur.execute("INSERT INTO dataset_src.nopk VALUES ('a', now()), ('b', now())")
         # Analyze the table
-        cur.execute("ANALYZE flow_test.sample")
+        cur.execute("ANALYZE dataset_src.sample")
     test_conn.commit()
     yield
     with test_conn.cursor() as cur:
-        cur.execute("DROP SCHEMA IF EXISTS flow_test CASCADE")
+        cur.execute("DROP SCHEMA IF EXISTS dataset_src CASCADE")
     test_conn.commit()
 
 
 @pytest.fixture(autouse=True)
-def _monkeypatch_erp_source(monkeypatch):
-    """Redirect erp_source.connect to the test database."""
+def _monkeypatch_dataset_source(monkeypatch):
+    """Redirect dataset_source.connect to the test database."""
     @contextmanager
     def mock_connect():
         conn = psycopg.connect(DATABASE_URL)
@@ -80,10 +84,11 @@ def _monkeypatch_erp_source(monkeypatch):
         finally:
             conn.close()
 
-    monkeypatch.setattr("app.erp_source.connect", mock_connect)
+    monkeypatch.setattr("app.dataset_source.connect", mock_connect)
 
 
-def bind_table(client, pipeline_slug, node_uid, table_kind="table", external_id="flow_test.sample"):
+def bind_table(client, pipeline_slug, node_uid, table_kind="table", external_id="dataset_src.sample",
+               rules=None):
     """Helper to bind a node to a table object."""
     oid = add_inventory_object(
         kind=table_kind,
@@ -92,7 +97,7 @@ def bind_table(client, pipeline_slug, node_uid, table_kind="table", external_id=
     )
     r = client.put(
         f"/api/pipelines/{pipeline_slug}/bindings/{node_uid}",
-        json={"object_id": oid, "rules": {"freshness_column": "updated_at"}},
+        json={"object_id": oid, "rules": {"freshness_column": "updated_at"} if rules is None else rules},
     )
     assert r.status_code == 200, r.text
     return oid
@@ -126,6 +131,38 @@ def test_preview_defaults_to_updated_at_desc(client):
     assert body["latest"] is True
     assert len(body["rows"]) == 30
     assert body["limit"] == 50
+
+
+def test_preview_without_freshness_column_falls_back_to_primary_key(client):
+    f = create_flow(client)
+    p = promote(client, f)
+    oid = bind_table(client, p["slug"], "u-node-01", rules={})
+    body = client.get(f"/api/pipelines/{p['slug']}/objects/{oid}/preview").json()
+    assert body["ordered_by"] == "id"
+    assert body["direction"] == "desc"
+    assert body["latest"] is True
+    assert body["rows"][0][0] == "30"
+
+
+def test_preview_uses_the_source_order_column_before_the_primary_key(client, monkeypatch):
+    monkeypatch.setattr(settings, "dataset_source_order_column", "updated_at")
+    f = create_flow(client)
+    p = promote(client, f)
+    oid = bind_table(client, p["slug"], "u-node-01", rules={})
+    body = client.get(f"/api/pipelines/{p['slug']}/objects/{oid}/preview").json()
+    assert body["ordered_by"] == "updated_at"
+
+
+def test_preview_of_a_table_without_key_or_config_is_unordered(client, monkeypatch):
+    monkeypatch.setattr(settings, "dataset_source_order_column", "no_such_column")
+    f = create_flow(client)
+    p = promote(client, f)
+    oid = bind_table(client, p["slug"], "u-node-01", external_id="dataset_src.nopk", rules={})
+    body = client.get(f"/api/pipelines/{p['slug']}/objects/{oid}/preview").json()
+    assert body["ordered_by"] is None
+    assert body["direction"] is None
+    assert body["latest"] is False
+    assert len(body["rows"]) == 2
 
 
 def test_preview_limit_capped_at_100(client):
@@ -233,7 +270,7 @@ def test_preview_injection_order_by_rejected(client):
     f = create_flow(client)
     p = promote(client, f)
     oid = bind_table(client, p["slug"], "u-node-01")
-    r = client.get(f"/api/pipelines/{p['slug']}/objects/{oid}/preview?order_by=id;DROP TABLE flow_test.sample")
+    r = client.get(f"/api/pipelines/{p['slug']}/objects/{oid}/preview?order_by=id;DROP TABLE dataset_src.sample")
     assert r.status_code == 400
 
 
@@ -247,7 +284,7 @@ def test_preview_injection_filter_value_bound(client):
     assert r.status_code in (400, 502)
     # Verify the table still exists with 30 rows
     with psycopg.connect(DATABASE_URL) as conn:
-        count = conn.execute("SELECT COUNT(*) FROM flow_test.sample").fetchone()[0]
+        count = conn.execute("SELECT COUNT(*) FROM dataset_src.sample").fetchone()[0]
         assert count == 30
 
 
@@ -369,7 +406,7 @@ def test_non_table_object_is_400(client):
 def test_object_not_bound_in_pipeline_is_404(client):
     f = create_flow(client)
     p = promote(client, f)
-    oid = add_inventory_object(kind="table", external_id="flow_test.sample")
+    oid = add_inventory_object(kind="table", external_id="dataset_src.sample")
     r = client.get(f"/api/pipelines/{p['slug']}/objects/{oid}/preview")
     assert r.status_code == 404
 
@@ -385,16 +422,16 @@ def test_unauthenticated_cannot_read_datasets(client, anonymous_client):
 
 
 def test_source_unavailable_is_503(client, monkeypatch):
-    from app import erp_source
+    from app import dataset_source
 
     def mock_unavailable(*args, **kwargs):
-        raise erp_source.SourceUnavailable("test error")
+        raise dataset_source.SourceUnavailable("test error")
 
     f = create_flow(client)
     p = promote(client, f)
     oid = bind_table(client, p["slug"], "u-node-01")
 
-    monkeypatch.setattr(erp_source, "connect", mock_unavailable)
+    monkeypatch.setattr(dataset_source, "connect", mock_unavailable)
     r = client.get(f"/api/pipelines/{p['slug']}/objects/{oid}/schema")
     assert r.status_code == 503
 

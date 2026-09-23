@@ -30,7 +30,8 @@ PERMISSION_RANK = {"view": 1, "edit": 2, "full": 3}
 
 
 class User(Base):
-    """An account. Registration is open: anyone reaching the API can create one.
+    """An account. Who may create one is `settings.registration`; the first
+    account on a server is always allowed, and becomes its admin.
 
     The password is never stored, only a PBKDF2-SHA256 digest produced by
     `security.hash_password` (the iteration count travels inside the string, so
@@ -45,6 +46,9 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(254), nullable=False, unique=True)
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    # The first account on the server. Nothing checks it yet beyond the UI; it
+    # is the hook the admin-only screens (sources, registration) will use.
+    is_admin: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

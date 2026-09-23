@@ -1,11 +1,11 @@
 # The collector's own dependency, and its only one.
 #
-# It runs on the host under ~/.venvs/data/bin/python (the house data
-# interpreter, which already carries psycopg2), NOT inside a container and NOT
-# on the API's interpreter -- so it does not inherit backend/requirements.txt,
-# where the driver is psycopg 3. The probes shell out to `docker exec` and
+# It runs on the host, from cron, under a virtualenv of its own (e.g.
+# /opt/lineos/venv) -- NOT inside a container and NOT on the API's interpreter,
+# so it does not inherit backend/requirements.txt, where the driver is
+# psycopg 3. The probes shell out to `docker exec` and
 # `crontab`, which need no library; only the database sink needs a driver.
 #
 # To run the collector's tests, the test venv needs it too:
-#   ~/.venvs/flowops/bin/pip install -r ops/requirements.txt
+#   pip install -r backend/requirements-dev.txt   (which includes this file)
 psycopg2-binary~=2.9

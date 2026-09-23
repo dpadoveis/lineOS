@@ -50,6 +50,12 @@
   padding: 4px;
 }
 .fe-auth-switch:hover { color: var(--txt); text-decoration: underline; }
+.fe-auth-note {
+  margin: 0;
+  color: var(--mut);
+  font: 400 11.5px/1.5 'IBM Plex Sans', sans-serif;
+  text-align: center;
+}
 
 /* ---------- home ---------- */
 .fe-home {
@@ -157,8 +163,8 @@
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: #e8c26a;
-  color: #101317;
+  background: var(--accent);
+  color: var(--on-accent);
   font: 600 11px 'IBM Plex Mono', monospace;
 }
 .fe-home-username { font: 500 12px 'IBM Plex Sans', sans-serif; color: var(--txt2); }
@@ -292,7 +298,7 @@
   color: var(--mut2);
 }
 .fe-perm-edit { color: #6fb8d3; border-color: #6fb8d355; }
-.fe-perm-full { color: #e8c26a; border-color: #e8c26a55; }
+.fe-perm-full { color: var(--accent-ink); border-color: color-mix(in srgb, var(--accent) 33%, transparent); }
 
 @media (max-width: 620px) {
   .fe-home-title-row { flex-direction: column; align-items: stretch; gap: 12px; }

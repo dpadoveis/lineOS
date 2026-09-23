@@ -6,6 +6,7 @@ import { goFlow, goLineage } from '../app/route.js';
 import { useLineageShare } from './useLineageShare.js';
 import { syncEdges } from './api.js';
 import ShareMenu from '../flow/ShareMenu.jsx';
+import { LogoMark } from '../app/Brand.jsx';
 
 // The only bar on the screen (spec §5.6), built from the editor's own header
 // classes. The collection age is always visible: a stopped monitor showing
@@ -77,7 +78,7 @@ export default function PipelineHeader({ view, filter, onFilter, refreshError, r
       <button type="button" className="fe-btn" onClick={goLineage} title="Back to data lineage">
         ←
       </button>
-      <div className="fe-logo">◇</div>
+      <LogoMark />
       <div className="fe-title-block">
         <span className="fe-title">{meta.name}</span>
         <span className="fe-subtitle">DATA LINEAGE</span>

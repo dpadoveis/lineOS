@@ -9,10 +9,10 @@ __pycache__/
 .pytest_cache/
 .venv/
 
-# Segredos do compose
+# Compose secrets
 .env
 
-# Saída do Playwright (e2e/)
+# Playwright output (e2e/)
 test-results
 
 # Local secrets mounted into the API

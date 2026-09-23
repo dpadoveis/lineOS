@@ -1,5 +1,5 @@
-// Hash routing, with no dependency: the SPA is published under a subpath
-// (/flow-editor/) and nginx knows no route other than index.html. With a hash,
+// Hash routing, with no dependency: the SPA may be published under a subpath
+// (LINEOS_BASE) and nginx knows no route other than index.html. With a hash,
 // a shared link never depends on server configuration.
 //
 //   #/                      the home, with the recent diagrams
@@ -13,24 +13,24 @@
 import { useEffect, useState } from 'react';
 
 export function parseHash(hash) {
-  const bruto = (hash || '').replace(/^#\/?/, '');
-  const partes = bruto.split('/').filter(Boolean);
-  if (!partes.length) return { view: 'home' };
-  if (partes[0] === 'new') return { view: 'editor', flowRef: null };
-  if (partes[0] === 'flow' && partes[1]) return { view: 'editor', flowRef: decodeURIComponent(partes[1]) };
-  if (partes[0] === 'share' && partes[1]) {
+  const raw = (hash || '').replace(/^#\/?/, '');
+  const parts = raw.split('/').filter(Boolean);
+  if (!parts.length) return { view: 'home' };
+  if (parts[0] === 'new') return { view: 'editor', flowRef: null };
+  if (parts[0] === 'flow' && parts[1]) return { view: 'editor', flowRef: decodeURIComponent(parts[1]) };
+  if (parts[0] === 'share' && parts[1]) {
     // #/share/<token> or #/share/<token>/lineage/<slug>
-    const token = decodeURIComponent(partes[1]);
-    if (partes[2] === 'lineage' && partes[3]) {
-      return { view: 'share', token, lineageSlug: decodeURIComponent(partes[3]) };
+    const token = decodeURIComponent(parts[1]);
+    if (parts[2] === 'lineage' && parts[3]) {
+      return { view: 'share', token, lineageSlug: decodeURIComponent(parts[3]) };
     }
     return { view: 'share', token };
   }
   // Support both 'lineage' and 'pipelines' prefix for backward compatibility
-  const isLineageRoute = partes[0] === 'lineage' || partes[0] === 'pipelines';
-  if (isLineageRoute && partes[1]) {
-    const uid = partes[2] === 'node' && partes[3] ? decodeURIComponent(partes[3]) : null;
-    return { view: 'pipeline', slug: decodeURIComponent(partes[1]), uid };
+  const isLineageRoute = parts[0] === 'lineage' || parts[0] === 'pipelines';
+  if (isLineageRoute && parts[1]) {
+    const uid = parts[2] === 'node' && parts[3] ? decodeURIComponent(parts[3]) : null;
+    return { view: 'pipeline', slug: decodeURIComponent(parts[1]), uid };
   }
   if (isLineageRoute) return { view: 'home', viewProp: 'lineage' };
   return { view: 'home' };

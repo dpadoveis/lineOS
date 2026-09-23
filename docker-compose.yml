@@ -1,27 +1,66 @@
-# Postgres + API + the published frontend of the Flow Editor.
+# lineOS: Postgres + API + the published frontend.
 #
-# In development the frontend runs on Vite (`npm run dev`, port 5173) and
-# reaches the API through the /api proxy in vite.config.js; the `frontend`
-# service here is the published version (a static build served by nginx under
-# /flow-editor/). See docs/DEPLOY.md.
+#   cp .env.example .env    # set FLOW_DB_PASSWORD
+#   docker compose up -d    # then open http://localhost:8020 and create the admin
 #
-# Ports on this host (your-host): 5432 and 5433 are taken by other
-# Postgres containers, so this one sits on 5434; the API on 8010 and the
-# frontend on 8020 -- all three published on 127.0.0.1 only. The host's own
-# nginx is what publishes the editor, at /flow-editor/ (see docs/DEPLOY.md).
+# In development the frontend runs on Vite instead (`npm run dev`, port 5173)
+# and reaches the API through the /api proxy in vite.config.js, which is why
+# the API is also published on 127.0.0.1:8010. See docs/DEPLOY.md.
+#
+# The dataset tabs of the Data Lineage module read a Postgres of yours; that is
+# opt-in, in docker-compose.lineage.yml, so this file starts on a machine that
+# has nothing else running.
 
-name: flow-editor
+name: lineos
 
 services:
-  api:
-    build: ./backend
-    container_name: flow-api
+  postgres:
+    image: postgres:17-alpine
     restart: unless-stopped
     environment:
-      # Data Lineage dataset tabs: read-only source; the password is a mounted file,
-      # never an environment variable (docker inspect would print it).
-      ERP_RO_PASSWORD_FILE: /run/secrets/probe_ro_pw
-      DATABASE_URL: postgresql+psycopg://flow:${FLOW_DB_PASSWORD}@postgres:5432/flows
+      POSTGRES_USER: lineos
+      POSTGRES_DB: lineos
+      POSTGRES_PASSWORD: ${FLOW_DB_PASSWORD:?set FLOW_DB_PASSWORD in .env}
+    # Tuned to the memory ceiling below: shared_buffers plus max_connections x
+    # work_mem has to fit in it. Raise one, raise the other (docs/BACKEND.md).
+    command:
+      - postgres
+      - -c
+      - shared_buffers=128MB
+      - -c
+      - max_connections=50
+      - -c
+      - work_mem=4MB
+      - -c
+      - max_parallel_workers_per_gather=0
+    # Loopback only. The collector (ops/collector) runs on the host, from cron,
+    # and writes its telemetry here through a restricted role -- see
+    # ops/README.md. Nothing else needs this port.
+    ports:
+      - "127.0.0.1:${FLOW_DB_PORT:-5433}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lineos -d lineos"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - lineos
+    deploy:
+      resources:
+        limits:
+          cpus: "0.60"
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  api:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+psycopg://lineos:${FLOW_DB_PASSWORD}@postgres:5432/lineos
       DB_SCHEMA: flow
       STORAGE_DIR: /data/files
       # Label written to flow_versions.author when a save arrives through a
@@ -30,7 +69,8 @@ services:
       MAX_UPLOAD_MB: ${FLOW_MAX_UPLOAD_MB:-10}
       # Accounts and sharing. PUBLIC_BASE_URL is the address that goes into the
       # body of an email; SESSION_COOKIE_SECURE can only be true under HTTPS.
-      PUBLIC_BASE_URL: ${FLOW_PUBLIC_BASE_URL:-https://lineos.example.com/flow-editor/}
+      REGISTRATION: ${FLOW_REGISTRATION:-invite}
+      PUBLIC_BASE_URL: ${FLOW_PUBLIC_BASE_URL:-http://localhost:8020/}
       SESSION_COOKIE_SECURE: ${FLOW_SESSION_COOKIE_SECURE:-false}
       SESSION_DAYS: ${FLOW_SESSION_DAYS:-30}
       # SMTP is optional: with no host, "Send by email" falls back to the
@@ -42,10 +82,12 @@ services:
       SMTP_STARTTLS: ${FLOW_SMTP_STARTTLS:-true}
       SMTP_FROM: ${FLOW_SMTP_FROM:-}
     ports:
-      - "127.0.0.1:8010:8000"
+      - "127.0.0.1:${FLOW_API_PORT:-8010}:8000"
     volumes:
-      - ${ERP_RO_PASSWORD_HOST_FILE:-./secrets/probe_ro_pw}:/run/secrets/probe_ro_pw:ro
-      - flow_files:/data/files
+      - files:/data/files
+    depends_on:
+      postgres:
+        condition: service_healthy
     healthcheck:
       test:
         - CMD-SHELL
@@ -55,11 +97,7 @@ services:
       retries: 3
       start_period: 20s
     networks:
-      - flow-net
-      # Reaches warehouse-postgres by name. This gives reach to every container
-      # on airflow_default; the guard on the data is the read-only role
-      # lineage_probe_ro, not the network.
-      - airflow_default
+      - lineos
     deploy:
       resources:
         limits:
@@ -72,19 +110,21 @@ services:
     build:
       context: .
       dockerfile: docker/frontend.Dockerfile
-    container_name: flow-frontend
+      args:
+        # The subpath the SPA is served from: "/" at the root of a host, or
+        # e.g. "/lineos/" behind a proxy that shares the host. Fixed at build
+        # time -- Vite rewrites the asset URLs.
+        LINEOS_BASE: ${FLOW_BASE:-/}
     restart: unless-stopped
-    # Loopback only: the host's nginx (your-host.local:443) is the one
-    # that reaches this port, so nothing here needs an external interface.
+    # Loopback by default: put a reverse proxy with HTTPS in front, or set
+    # FLOW_BIND_IP to a private interface.
     ports:
-      - "${FLOW_BIND_IP:-127.0.0.1}:8020:80"
+      - "${FLOW_BIND_IP:-127.0.0.1}:${FLOW_HTTP_PORT:-8020}:80"
     depends_on:
       api:
         condition: service_healthy
     networks:
-      # A single network, exclusive to this project: the API is reached inside
-      # it, and the host's nginx reaches this container through 127.0.0.1:8020.
-      - flow-net
+      - lineos
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/healthz"]
       interval: 30s
@@ -97,13 +137,8 @@ services:
           memory: 128M
 
 volumes:
-  flow_files:
-    name: flow_files
+  pgdata:
+  files:
 
 networks:
-  # Exclusive to the Flow Editor -- no other stack on the host joins it.
-  flow-net:
-    name: flow-net
-  # The Airflow stack's network: joined, never created or removed from here.
-  airflow_default:
-    external: true
+  lineos:

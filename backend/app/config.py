@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Literal
 
 from pydantic_settings import BaseSettings
 
@@ -39,9 +40,9 @@ class Settings(BaseSettings):
     # not hand over live sessions.
     session_cookie: str = "flow_session"
     session_days: int = 30
-    # The application is published over HTTP on the tailnet; marking the cookie
-    # Secure here would break sign-in there. Turn it on together with HTTPS at
-    # the proxy.
+    # Off by default so a plain-HTTP install (localhost, a private network)
+    # can sign in at all: a Secure cookie is never sent over HTTP. Turn it on
+    # together with HTTPS at the proxy.
     session_cookie_secure: bool = False
     # PBKDF2 cost. It grows over time; old hashes stay valid because the
     # iteration count travels inside the hash itself.
@@ -51,7 +52,7 @@ class Settings(BaseSettings):
     # Public address of the SPA, used to build the share link in the body of an
     # email. The browser builds its own from window.location, but the server has
     # no such information.
-    public_base_url: str = "http://100.64.0.10/flow-editor/"
+    public_base_url: str = "http://localhost:8020/"
 
     # ── SMTP (optional) ──────────────────────────────────────────────
     # Without smtp_host, sending from the server answers 503 and the editor
@@ -66,16 +67,28 @@ class Settings(BaseSettings):
     # CORS is only needed when the frontend does not go through the Vite proxy.
     cors_origins: list[str] = []
 
-    # ── Read-only source for dataset previews (Pipeline Ops) ─────────
-    # Reached by container name over the airflow_default network -- never by
-    # IP, which Docker reassigns. The password is a mounted file, never an
-    # environment variable (docker inspect would print it). No file = the
-    # dataset routes answer 503.
-    erp_ro_host: str = "warehouse-postgres"
-    erp_ro_port: int = 5432
-    erp_ro_db: str = "warehouse"
-    erp_ro_user: str = "lineage_probe_ro"
-    erp_ro_password_file: Path | None = None
+    # ── Read-only source for dataset previews (Data Lineage) ─────────
+    # The Postgres whose tables the lineages observe. Reach it by name (a
+    # container on a shared network, see docker-compose.lineage.yml) rather
+    # than by an IP Docker may reassign. The password is a mounted file, never
+    # an environment variable (docker inspect would print it). No host or no
+    # file = the dataset routes answer 503.
+    dataset_source_host: str = ""
+    dataset_source_port: int = 5432
+    dataset_source_db: str = ""
+    dataset_source_user: str = ""
+    dataset_source_password_file: Path | None = None
+    # Column the preview sorts by (newest first) when the binding names no
+    # freshness column -- a row id or an insertion timestamp the tables of this
+    # source share. Empty, or absent from a table: the primary key, then no
+    # ordering at all.
+    dataset_source_order_column: str = ""
+
+    # ── Accounts: who may register ───────────────────────────────────
+    # The first account (the admin) can always sign up. After it -- open:
+    # anyone reaching the API; invite: only someone holding a live share link
+    # (a diagram shared by link or by email is the invitation); closed: nobody.
+    registration: Literal["open", "invite", "closed"] = "invite"
 
 
 settings = Settings()

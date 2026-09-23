@@ -134,7 +134,7 @@ def test_edit_neither_deletes_nor_shares(client, anonymous_client):
     register(guest, "bob@example.test", "Bob")
     share_with(client, flow["id"], "bob@example.test", "edit")
 
-    # Apagar e gerenciar compartilhamento pedem controle total.
+    # Deleting and managing sharing need full control.
     assert guest.delete(f"/api/flows/{flow['id']}").status_code == 403
     assert guest.get(f"/api/shares/{flow['id']}").status_code == 403
 
@@ -145,9 +145,9 @@ def test_full_control_shares_and_deletes(client, anonymous_client):
     register(guest, "bob@example.test", "Bob")
     share_with(client, flow["id"], "bob@example.test", "full")
 
-    estado = guest.get(f"/api/shares/{flow['id']}")
-    assert estado.status_code == 200
-    assert estado.json()["is_owner"] is False
+    state = guest.get(f"/api/shares/{flow['id']}")
+    assert state.status_code == 200
+    assert state.json()["is_owner"] is False
     assert guest.delete(f"/api/flows/{flow['id']}").status_code == 204
 
 
@@ -250,12 +250,12 @@ def test_email_without_smtp_returns_the_mailto(client):
         json={"to": "bob@example.test", "permission": "edit", "base_url": "http://x/editor/"},
     )
     assert r.status_code == 200
-    corpo = r.json()
+    body = r.json()
     # Without SMTP the answer is not an error: the editor falls back to the
     # local mail client.
-    assert corpo["sent"] is False
-    assert corpo["url"].startswith("http://x/editor/#/share/")
-    assert corpo["mailto"].startswith("mailto:bob%40example.test")
+    assert body["sent"] is False
+    assert body["url"].startswith("http://x/editor/#/share/")
+    assert body["mailto"].startswith("mailto:bob%40example.test")
 
 
 def test_email_base_with_a_token_placeholder_is_a_link_template(client):
@@ -264,12 +264,12 @@ def test_email_base_with_a_token_placeholder_is_a_link_template(client):
     r = client.post(
         f"/api/shares/{flow['id']}/email",
         json={"to": "bob@example.test", "permission": "view",
-              "base_url": "http://x/flow-editor/#/share/{token}/lineage/mapa"},
+              "base_url": "http://x/lineos/#/share/{token}/lineage/map"},
     )
     assert r.status_code == 200
     url = r.json()["url"]
-    assert url.startswith("http://x/flow-editor/#/share/")
-    assert url.endswith("/lineage/mapa")
+    assert url.startswith("http://x/lineos/#/share/")
+    assert url.endswith("/lineage/map")
     assert "{token}" not in url and url.count("#/share/") == 1
 
 
@@ -310,10 +310,10 @@ def test_changing_the_password_requires_the_current_one(client):
 
 
 def test_changing_the_password_refuses_short_and_identical(client):
-    curta = client.post(
+    too_short = client.post(
         "/api/auth/password", json={"current_password": PASSWORD, "new_password": "1234"}
     )
-    assert curta.status_code == 422
+    assert too_short.status_code == 422
     igual = client.post(
         "/api/auth/password", json={"current_password": PASSWORD, "new_password": PASSWORD}
     )
@@ -321,9 +321,9 @@ def test_changing_the_password_refuses_short_and_identical(client):
 
 
 def test_the_new_password_works_on_the_next_login(client):
-    nova = "new-password-of-alice-9"
+    new_password = "new-password-of-alice-9"
     r = client.post(
-        "/api/auth/password", json={"current_password": PASSWORD, "new_password": nova}
+        "/api/auth/password", json={"current_password": PASSWORD, "new_password": new_password}
     )
     assert r.status_code == 200
     # The tab that changed the password stays signed in (session renewed).
@@ -332,19 +332,19 @@ def test_the_new_password_works_on_the_next_login(client):
     client.post("/api/auth/logout")
     antiga = client.post("/api/auth/login", json={"email": "owner@example.test", "password": PASSWORD})
     assert antiga.status_code == 401
-    ok = client.post("/api/auth/login", json={"email": "owner@example.test", "password": nova})
+    ok = client.post("/api/auth/login", json={"email": "owner@example.test", "password": new_password})
     assert ok.status_code == 200
 
 
 def test_changing_the_password_drops_the_other_sessions(client, anonymous_client):
-    # Segunda aba, mesma conta.
+    # A second tab, same account.
     outra = anonymous_client
     entrou = outra.post("/api/auth/login", json={"email": "owner@example.test", "password": PASSWORD})
     assert entrou.status_code == 200
     assert outra.get("/api/auth/me").json()["user"] is not None
 
     client.post(
-        "/api/auth/password", json={"current_password": PASSWORD, "new_password": "senha-nova-123456"}
+        "/api/auth/password", json={"current_password": PASSWORD, "new_password": "senha-new_password-123456"}
     )
     # Changing a password exists to throw out whoever should not be inside.
     assert outra.get("/api/auth/me").json()["user"] is None
@@ -352,6 +352,6 @@ def test_changing_the_password_drops_the_other_sessions(client, anonymous_client
 
 def test_changing_the_password_needs_a_session(anonymous_client):
     r = anonymous_client.post(
-        "/api/auth/password", json={"current_password": "x", "new_password": "senha-nova-123"}
+        "/api/auth/password", json={"current_password": "x", "new_password": "senha-new_password-123"}
     )
     assert r.status_code == 401

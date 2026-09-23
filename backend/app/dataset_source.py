@@ -1,7 +1,8 @@
-"""Read-only sessions on the ERP database, for the dataset tabs.
+"""Read-only sessions on the dataset source, for the dataset tabs.
 
-The role is read-only and time-limited at the server; the options below repeat
-both limits so a misconfigured role still cannot write or run long.
+The source is the Postgres whose tables the lineages observe. Its role should be
+read-only and time-limited at the server; the options below repeat both limits
+so a misconfigured role still cannot write or run long.
 """
 from contextlib import contextmanager
 
@@ -11,11 +12,11 @@ from .config import settings
 
 
 class SourceUnavailable(Exception):
-    """No password file configured, or the database cannot be reached."""
+    """No source configured, or the database cannot be reached."""
 
 
 def _password() -> str:
-    path = settings.erp_ro_password_file
+    path = settings.dataset_source_password_file
     if not path:
         raise SourceUnavailable("dataset source not configured")
     try:
@@ -26,12 +27,14 @@ def _password() -> str:
 
 @contextmanager
 def connect():
+    if not settings.dataset_source_host:
+        raise SourceUnavailable("dataset source not configured")
     try:
         conn = psycopg.connect(
-            host=settings.erp_ro_host,
-            port=settings.erp_ro_port,
-            dbname=settings.erp_ro_db,
-            user=settings.erp_ro_user,
+            host=settings.dataset_source_host,
+            port=settings.dataset_source_port,
+            dbname=settings.dataset_source_db,
+            user=settings.dataset_source_user,
             password=_password(),
             connect_timeout=5,
             options="-c default_transaction_read_only=on -c statement_timeout=15000",

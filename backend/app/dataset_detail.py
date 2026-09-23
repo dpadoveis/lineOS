@@ -62,11 +62,26 @@ def parse_filters(raw: list[str], known: set[str]) -> list[tuple[str, str, str |
     return out
 
 
-def default_order(known: set[str], rules: dict) -> str | None:
-    fc = (rules or {}).get("freshness_column")
-    if fc in known:
-        return fc
-    return "r_e_c_n_o_" if "r_e_c_n_o_" in known else None
+def primary_key(conn, schema: str, table: str) -> str | None:
+    """The table's primary key column, or None when it has none or a composite
+    one (sorting by the first half of a composite key is no "newest first")."""
+    rows = conn.execute(
+        "SELECT kcu.column_name FROM information_schema.table_constraints tc "
+        "JOIN information_schema.key_column_usage kcu "
+        "ON kcu.constraint_name = tc.constraint_name AND kcu.table_schema = tc.table_schema "
+        "WHERE tc.constraint_type = 'PRIMARY KEY' AND tc.table_schema = %s AND tc.table_name = %s",
+        (schema, table),
+    ).fetchall()
+    return rows[0][0] if len(rows) == 1 else None
+
+
+def default_order(known: set[str], rules: dict, source_column: str = "", pk: str | None = None) -> str | None:
+    """What "latest" means for a table: the binding's freshness column, then
+    the column configured for the whole source, then the primary key."""
+    for candidate in ((rules or {}).get("freshness_column"), source_column, pk):
+        if candidate and candidate in known:
+            return candidate
+    return None
 
 
 def build_preview(schema, table, order_by, direction, filters, limit):
@@ -98,13 +113,14 @@ def cell(value):
     return text if len(text) <= MAX_CELL else text[:MAX_CELL] + "…"
 
 
-def preview(conn, schema, table, rules, order_by, direction, raw_filters, limit):
+def preview(conn, schema, table, rules, order_by, direction, raw_filters, limit, source_order_column=""):
     cols = columns(conn, schema, table)
     known = {c["name"] for c in cols}
     if order_by and order_by not in known:
         raise BadRequest(f"unknown column {order_by!r}")
     latest = not order_by
-    order_by = order_by or default_order(known, rules)
+    if not order_by:
+        order_by = default_order(known, rules, source_order_column, primary_key(conn, schema, table))
     direction = direction if order_by else None
     if latest and order_by:
         direction = "desc"

@@ -1,6 +1,6 @@
-// Smoke renders of the lineage screen's parts, against the real captured
-// payload. The unit tests cover the logic; these catch what only rendering
-// does -- a variable read before its declaration blanked the whole screen once
+// Smoke renders of the lineage screen's parts, against the synthetic sample
+// payload (e2e/fixtures/sample-lineage.json). The unit tests cover the logic;
+// these catch what only rendering does -- a variable read before its declaration blanked the whole screen once
 // (a ReferenceError at render) with every other test green.
 import { describe, expect, it } from 'vitest';
 import { createElement as h } from 'react';

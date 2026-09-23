@@ -46,7 +46,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Flow Editor - API",
+    title="lineOS API",
     version="1.0.0",
     lifespan=lifespan,
     docs_url="/api/docs",

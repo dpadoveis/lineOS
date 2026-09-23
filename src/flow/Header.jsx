@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import HistoryMenu from './HistoryMenu.jsx';
 import ShareMenu from './ShareMenu.jsx';
+import Brand from '../app/Brand.jsx';
 
 export default function Header({
   saveOpen,
@@ -8,9 +9,9 @@ export default function Header({
   onSavePng,
   onSaveJson,
   onCopyJson,
-  onGravarVersao,
-  onGravarComoNovo,
-  onEnviarPng,
+  onSaveVersion,
+  onSaveAsNew,
+  onUploadPng,
   // Actions: one dropdown holding import and sharing, left of Save. Sharing
   // needs a whole panel, so the menu only opens it -- the panel then hangs
   // from the same button.
@@ -21,9 +22,9 @@ export default function Header({
   dirty,
   saving,
   viewing,
-  onAbrirBiblioteca,
-  onNovoFluxo,
-  onRenomear,
+  onOpenLibrary,
+  onNewFlow,
+  onRename,
   // History: the document name is the trigger; there is no button of its own.
   historyOpen,
   onToggleHistory,
@@ -61,11 +62,7 @@ export default function Header({
   return (
     <header className="fe-header">
       <button className="fe-home-link" onClick={onHome} title="Back to your diagrams">
-        <div className="fe-logo">◇</div>
-        <div className="fe-title-block">
-          <span className="fe-title">Flow Editor</span>
-          <span className="fe-subtitle">ALL DIAGRAMS</span>
-        </div>
+        <Brand subtitle="ALL DIAGRAMS" />
       </button>
 
       {/* Identity of the open document and, on click, its version history. */}
@@ -93,8 +90,8 @@ export default function Header({
             onClose={onToggleHistory}
             onView={history.onView}
             onRestore={history.onRestore}
-            onRename={onRenomear}
-            onSaveAsNew={onGravarComoNovo}
+            onRename={onRename}
+            onSaveAsNew={onSaveAsNew}
             onRemoveAsset={history.onRemoveAsset}
             assetUrl={history.assetUrl}
           />
@@ -107,11 +104,11 @@ export default function Header({
         </span>
       )}
 
-      <button className="fe-btn" onClick={() => onAbrirBiblioteca(false)}>
+      <button className="fe-btn" onClick={() => onOpenLibrary(false)}>
         <span className="fe-btn-accent-mark">▤</span>Flows
       </button>
 
-      <button className="fe-ghost-btn" onClick={onNovoFluxo}>New</button>
+      <button className="fe-ghost-btn" onClick={onNewFlow}>New</button>
 
       <div className="fe-spacer" />
 
@@ -202,15 +199,15 @@ export default function Header({
         </button>
         {saveOpen && (
           <div className="fe-save-menu">
-            <button className="fe-menu-item" onClick={onGravarVersao}>
+            <button className="fe-menu-item" onClick={onSaveVersion}>
               <span className="fe-menu-item-title">Save version</span>
               <span className="fe-menu-item-sub">Ctrl+S · enters the server history</span>
             </button>
-            <button className="fe-menu-item" onClick={onGravarComoNovo}>
+            <button className="fe-menu-item" onClick={onSaveAsNew}>
               <span className="fe-menu-item-title">Save as new…</span>
               <span className="fe-menu-item-sub">creates another flow on the server</span>
             </button>
-            <button className="fe-menu-item" onClick={onEnviarPng}>
+            <button className="fe-menu-item" onClick={onUploadPng}>
               <span className="fe-menu-item-title">Image (PNG) → server</span>
               <span className="fe-menu-item-sub">attaches the rendered plane to the flow</span>
             </button>
@@ -225,7 +222,7 @@ export default function Header({
             </button>
             <button className="fe-menu-item" onClick={onCopyJson}>
               <span className="fe-menu-item-title">JSON (copy)</span>
-              <span className="fe-menu-item-sub">paste into another flow editor</span>
+              <span className="fe-menu-item-sub">paste into another lineOS editor</span>
             </button>
           </div>
         )}

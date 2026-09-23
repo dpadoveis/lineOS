@@ -20,7 +20,7 @@ point: *"A backend can be plugged in later at `payload.js` /
 | Authentication | none at first | the API only on `127.0.0.1`; `flow_versions.author` a free label, not an identity |
 | History | immutable versions | an INSERT/SELECT-only table; restoring = inserting a copy |
 | Running it | Postgres + API in Docker; frontend on Vite | an `/api` proxy in the dev server, no CORS |
-| Files | the flows' JSON **and** attachments/PNG | the `flow_files` volume + the `flow_assets` table |
+| Files | the flows' JSON **and** attachments/PNG | the `files` volume + the `flow_assets` table |
 
 ## 3. Design decisions
 
@@ -80,7 +80,7 @@ being handed the same number — `UNIQUE (flow_id, version)` is the safety net.
 The project has one table per thing and a brand-new schema. Alembic would add a
 migrations directory, an extra command in the deploy and a state to version, to
 solve a problem that does not exist yet. We adopted the same mechanism as the
-sibling project `~/VistoPro`: `Base.metadata.create_all` at startup (creates
+usual pattern: `Base.metadata.create_all` at startup (creates
 missing tables only) followed by `app/migrations.py`, a list of idempotent
 statements (`IF EXISTS` / `IF NOT EXISTS`) for changes to already populated
 tables. **Every column/constraint change goes there.** Once the list passes a
@@ -297,18 +297,16 @@ list (`png`, `jpeg`, `svg`, `json`, `pdf`, `txt`) are refused too.
 
 ## 7. Resources, and why these numbers
 
-The host has **2 vCPUs, ~7 GiB of free RAM** and more than ten containers from
-other projects running. The ceilings exist so this project does not get in their
-way.
+lineOS is meant to run next to other things on a small machine, so every
+service has a ceiling. On a 2-vCPU host, the three of them leave more than a
+third of the CPU for everything else.
 
 | Service | CPU | Memory | Rationale |
 | --- | --- | --- | --- |
-| `flow-postgres` | 0.60 | 512 MB (256 MB reserved) | `shared_buffers=128MB` + up to 50 connections × `work_mem=4MB` + overhead fit with room to spare |
-| `flow-api` | 0.60 | 384 MB (128 MB reserved) | 1 uvicorn worker + a 5+5 connection pool; the 2 MB body limit prevents spikes |
+| `postgres` | 0.60 | 512 MB (256 MB reserved) | `shared_buffers=128MB` + up to 50 connections × `work_mem=4MB` + overhead fit with room to spare |
+| `api` | 0.60 | 384 MB (128 MB reserved) | 1 uvicorn worker + a 5+5 connection pool; the 2 MB body limit prevents spikes |
 
-Together, 1.2 of 2 CPUs — about 40% is left for the rest of the machine.
-`shm_size: 128m` on Postgres avoids intermittent shared-memory errors in Docker
-(the 64 MB default is tight). Parallelism is off
+Parallelism is off
 (`max_parallel_workers_per_gather=0`): with 0.60 CPU, a parallel worker only
 competes with itself.
 
@@ -316,9 +314,9 @@ competes with itself.
 confirm:
 
 ```bash
-docker inspect flow-postgres flow-api \
+docker inspect $(docker compose ps -q postgres api) \
   --format '{{.Name}} NanoCpus={{.HostConfig.NanoCpus}} Memory={{.HostConfig.Memory}}'
-docker stats --no-stream flow-postgres flow-api
+docker stats --no-stream $(docker compose ps -q postgres api)
 ```
 
 **When you touch one, touch the other:** raising `shared_buffers` or
@@ -339,8 +337,8 @@ docker compose down -v            # stop and DELETE the data
 Backing up the database and the attachments:
 
 ```bash
-docker exec flow-postgres pg_dump -U flow -d flows -n flow -Fc > flows.dump
-docker run --rm -v flow_files:/d -v "$PWD:/b" alpine tar czf /b/files.tgz -C /d .
+docker compose exec -T postgres pg_dump -U lineos -d lineos -n flow -Fc > lineos.dump
+docker run --rm -v lineos_files:/d -v "$PWD:/b" alpine tar czf /b/files.tgz -C /d .
 ```
 
 Useful queries:
@@ -364,7 +362,7 @@ account's sessions**; after signing in, the person changes the password through
 the interface (account menu → *Change password*), which is the normal path.
 
 ```bash
-docker exec -e TARGET=someone@example.com -e NEW='temporary-password' flow-api python -c "
+docker compose exec -e TARGET=someone@example.com -e NEW='temporary-password' api python -c "
 import os
 from sqlalchemy import select
 from app.database import SessionLocal
@@ -383,12 +381,12 @@ with SessionLocal() as db:
 "
 ```
 
-Diagnosis before resetting — the nginx log says whether the problem is a
-credential (`401`), an account that already exists (`409` on sign-up) or too many
-attempts (`429`):
+Diagnosis before resetting — the frontend's nginx log says whether the
+problem is a credential (`401`), an account that already exists (`409` on
+sign-up), a closed registration (`403`) or too many attempts (`429`):
 
 ```bash
-sudo grep auth /var/log/nginx/access.log | tail -20
+docker compose logs frontend | grep /api/auth/ | tail -20
 ```
 
 ## 9. Tests
@@ -410,26 +408,27 @@ SQLite does not have — and skip themselves without `DATABASE_URL_TEST`. They r
 in a schema of their own (`flow_test`), recreated at the start of the session:
 
 ```bash
-docker exec flow-postgres psql -U flow -d postgres \
-  -c "CREATE DATABASE flows_test OWNER flow"
+docker compose exec postgres psql -U lineos -d lineos -c "CREATE DATABASE flows_test"
 
-docker run --rm --network flow-net -v "$PWD/backend:/app:ro" -w /app \
-  -e DATABASE_URL_TEST="postgresql+psycopg://flow:$(grep FLOW_DB_PASSWORD .env | cut -d= -f2)@postgres:5432/flows_test" \
-  --entrypoint bash flow-editor-api \
-  -c "pip install -q -r requirements-dev.txt && python -m pytest -q"
+pip install -r backend/requirements-dev.txt
+cd backend
+DATABASE_URL_TEST="postgresql+psycopg://lineos:$(grep FLOW_DB_PASSWORD ../.env | cut -d= -f2)@127.0.0.1:5433/flows_test" pytest -q
 ```
+
+CI runs the same suite against a service Postgres on every push.
 
 ## 10. Troubleshooting
 
 | Symptom | Likely cause | Way out |
 | --- | --- | --- |
-| `port is already allocated` on startup | 5433 or 8010 taken by another service | change the **host** port in the compose file and the proxy `target` in `vite.config.js` |
+| `port is already allocated` on startup | 5433, 8010 or 8020 taken by another service | set `FLOW_DB_PORT` / `FLOW_API_PORT` / `FLOW_HTTP_PORT` in `.env` (and `FLOW_API_TARGET` for `npm run dev`) |
 | the frontend gets 404 on `/api/...` | Vite started before the proxy existed | restart `npm run dev` |
 | `server unavailable` in the status bar | the containers are stopped | `docker compose ps` and `docker compose up -d` |
 | 409 on save | another tab saved first | reopen the flow, or use "Save as new" |
 | 413 on save | a graph above 2 MB | shrink the flow, or raise `max_graph_bytes` **and** the API's memory |
-| Postgres complains about shared memory | not enough `shm_size` | it is already 128 MB; raise it together with `memory` |
-| `410` when downloading an attachment | the volume was recreated without the database | restore `flow_files` from the backup, or delete the orphaned metadata |
+| Postgres complains about shared memory | Docker's 64 MB `/dev/shm` default | add `shm_size: 128m` to the `postgres` service, and raise `memory` with it |
+| "registration needs an invitation" | `FLOW_REGISTRATION=invite` and no share link opened in that tab | open a link someone shared first, or set `open` / sign in |
+| `410` when downloading an attachment | the volume was recreated without the database | restore the `files` volume from the backup, or delete the orphaned metadata |
 | 401 on everything after an update | the API came to require an account | sign up on the first screen; the first registration adopts the flows that had no owner |
 | the sign-in "disappears" on reload | `SESSION_COOKIE_SECURE=true` without HTTPS | the browser drops the cookie; go back to `false` while the proxy serves HTTP |
 | "email sending is not configured" | no `SMTP_HOST` | expected — the editor opens the local mail client; fill in the `FLOW_SMTP_*` variables to send from the server |
@@ -439,18 +438,18 @@ docker run --rm --network flow-net -v "$PWD/backend:/app:ro" -w /app \
 
 - ~~**Authentication**~~ — done: accounts (`users`), a session in an `httpOnly`
   cookie (`user_sessions`), `flows.owner_id`, sharing at three levels (§4.1),
-  self-service password change and a rate limit on the credential routes (in
-  nginx — see [`DEPLOY.md`](DEPLOY.md)). Still out: **"forgot my password"**
+  self-service password change, a rate limit on the credential routes (in the
+  frontend's nginx) and a registration policy (`REGISTRATION`, see
+  [`DEPLOY.md`](DEPLOY.md)). Still out: **"forgot my password"**
   (with no SMTP there is nowhere to send the link; the way out is the operator
   reset, §8.1) and **email verification on sign-up**.
 - ~~**The frontend in the compose file**~~ — done: the `frontend` service serves
-  the SPA under `/flow-editor/` and is published on the nginx-proxy-manager. See
-  [`DEPLOY.md`](DEPLOY.md).
+  the SPA at `/` or under `FLOW_BASE`. See [`DEPLOY.md`](DEPLOY.md).
 - **Alembic** — see §3.4.
 - **Automatic purging of old versions** — nothing is deleted today. If the
   history grows too much, a retention routine (keep the last N and one per day)
-  would go in as a job in `lifespan`, like the daily closing in `~/VistoPro`.
-- **A frontend test suite** — there is only the end-to-end coverage of accounts,
-  sharing and the password change in `e2e/` (Playwright, through the shared
-  `~/tools/browser-test` environment); the rest of the verification is
-  `npm run build` plus a manual round trip in the editor.
+  would go in as a job in `lifespan`.
+- **A frontend test suite for the editor** — `src/ops/` has unit tests
+  (Vitest); the editor has only the end-to-end coverage of accounts, sharing
+  and the password change in `e2e/` (Playwright, not yet in CI). The rest of the
+  verification is `npm run build` plus a manual round trip in the editor.

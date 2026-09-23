@@ -21,19 +21,16 @@
   position: relative;
   z-index: 40;
 }
-.fe-logo {
-  width: 26px;
-  height: 26px;
-  display: grid;
-  place-items: center;
-  background: #e8c26a;
-  color: var(--bg);
-  border-radius: 5px;
-  box-shadow: var(--sh-chip);
-  font: 600 13px 'IBM Plex Mono', monospace;
-}
+/* The mark (src/app/Brand.jsx): a tile, one edge, three layer nodes. */
+.fe-logo { display: block; flex: none; }
+.fe-logo-tile { fill: var(--card); stroke: var(--edge1); stroke-width: 1.5; }
+.fe-logo-edge { fill: none; stroke: var(--accent); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.fe-logo-bronze { fill: var(--layer-bronze); }
+.fe-logo-silver { fill: var(--layer-silver); }
+.fe-logo-gold { fill: var(--accent); }
 .fe-title-block { display: flex; flex-direction: column; gap: 1px; }
 .fe-title { font: 600 13.5px/1 'IBM Plex Sans', sans-serif; letter-spacing: -0.01em; }
+.fe-title-os { font: 600 12.5px/1 'IBM Plex Mono', monospace; color: var(--accent-ink); margin-left: 1px; }
 .fe-subtitle { font: 400 10px/1 'IBM Plex Mono', monospace; color: var(--mut2); letter-spacing: 0.06em; }
 
 .fe-btn {
@@ -53,7 +50,7 @@
 }
 .fe-btn:hover { background: var(--btnh); border-color: var(--edge2); box-shadow: var(--sh-2); }
 .fe-btn:active { box-shadow: var(--sh-inset); }
-.fe-btn-accent-mark { font: 600 11px 'IBM Plex Mono', monospace; color: #e8c26a; }
+.fe-btn-accent-mark { font: 600 11px 'IBM Plex Mono', monospace; color: var(--accent-ink); }
 .fe-caret { color: var(--mut2); font-size: 9px; }
 
 .fe-save-anchor { position: relative; margin-left: 2px; }
@@ -77,7 +74,7 @@
 }
 .fe-home-link:hover { background: var(--btn); border-color: var(--line); }
 
-/* Selo de leitura, ao lado do nome do documento. */
+/* Read-only badge, next to the document name. */
 .fe-readonly {
   flex: none;
   padding: 4px 9px;
@@ -116,12 +113,12 @@
 }
 .fe-menu-item:hover { background: var(--btnh); }
 .fe-menu-item-title { display: flex; align-items: center; gap: 8px; font: 500 12.5px 'IBM Plex Sans', sans-serif; color: var(--txt); }
-.fe-menu-item-mark { width: 14px; text-align: center; color: #e8c26a; font: 600 12px 'IBM Plex Mono', monospace; }
+.fe-menu-item-mark { width: 14px; text-align: center; color: var(--accent-ink); font: 600 12px 'IBM Plex Mono', monospace; }
 .fe-menu-item-sub { font: 400 10.5px 'IBM Plex Mono', monospace; color: var(--mut2); }
 
 .fe-spacer { flex: 1; }
 
-/* ---------- menu de compartilhamento ---------- */
+/* ---------- share menu ---------- */
 .fe-share-menu {
   position: absolute;
   right: 0;
@@ -314,14 +311,14 @@
   font: 500 11px 'IBM Plex Sans', sans-serif;
   cursor: pointer;
 }
-.fe-organize-btn:hover { border-color: #e8c26a; color: #e8c26a; background: var(--btn); box-shadow: var(--sh-1); }
+.fe-organize-btn:hover { border-color: var(--accent); color: var(--accent-ink); background: var(--btn); box-shadow: var(--sh-1); }
 
 /* ---------- body ---------- */
 .fe-body { flex: 1; display: flex; min-height: 0; }
 
 /* ---------- sidebar ---------- */
 .fe-sidebar {
-  /* A largura chega inline, do estado (resizeSidebar). */
+  /* The width arrives inline, from the state (resizeSidebar). */
   width: 290px;
   position: relative;
   flex: none;
@@ -373,7 +370,7 @@ body.fe-resizing { cursor: col-resize; user-select: none; }
   cursor: pointer;
 }
 .fe-rail-btn:hover { background: var(--btn); color: var(--txt); }
-.fe-rail-icon { font: 600 13px 'IBM Plex Mono', monospace; color: #e8c26a; }
+.fe-rail-icon { font: 600 13px 'IBM Plex Mono', monospace; color: var(--accent-ink); }
 .fe-rail-label {
   writing-mode: vertical-rl;
   font: 600 10px 'IBM Plex Mono', monospace;
@@ -468,7 +465,7 @@ body.fe-resizing { cursor: col-resize; user-select: none; }
   font: 500 12px 'IBM Plex Sans', sans-serif;
   cursor: pointer;
 }
-.fe-new-tool-btn:hover:not(:disabled) { border-color: #e8c26a; border-style: solid; box-shadow: var(--sh-1); }
+.fe-new-tool-btn:hover:not(:disabled) { border-color: var(--accent); border-style: solid; box-shadow: var(--sh-1); }
 .fe-new-tool-btn:disabled { opacity: .45; cursor: not-allowed; }
 .fe-empty-results-title { font: 500 12px 'IBM Plex Sans', sans-serif; color: var(--mut); }
 .fe-empty-results-sub { font: 400 11px/1.5 'IBM Plex Sans', sans-serif; color: var(--mut3); }
@@ -830,7 +827,7 @@ body.fe-resizing { cursor: col-resize; user-select: none; }
   line-height: 1;
   cursor: pointer;
 }
-.fe-meta-add:hover { border-color: #e8c26a; color: #e8c26a; background: var(--btnh); box-shadow: var(--sh-1); }
+.fe-meta-add:hover { border-color: var(--accent); color: var(--accent-ink); background: var(--btnh); box-shadow: var(--sh-1); }
 
 /* The single port: the dot on the right of a node, dragged onto another one
    to draw an arrow. */
@@ -843,10 +840,10 @@ body.fe-resizing { cursor: col-resize; user-select: none; }
   border-radius: 50%;
   border: 2px solid var(--bg);
   box-shadow: var(--sh-chip);
-  background: #e8c26a;
+  background: var(--accent);
   cursor: crosshair;
 }
-.fe-port:hover { background: #f5d896; }
+.fe-port:hover { background: var(--accent-hi); }
 
 /* The resize handle: discreet until the pointer reaches the node. */
 .fe-node-resize {
@@ -863,7 +860,7 @@ body.fe-resizing { cursor: col-resize; user-select: none; }
     linear-gradient(135deg, transparent 0 52%, var(--edge2) 52% 60%, transparent 60% 70%, var(--edge2) 70% 78%, transparent 78%);
 }
 .fe-node:hover .fe-node-resize, .fe-node-resizing .fe-node-resize { opacity: 1; }
-.fe-node-resize:hover { background: linear-gradient(135deg, transparent 0 52%, #e8c26a 52% 60%, transparent 60% 70%, #e8c26a 70% 78%, transparent 78%); }
+.fe-node-resize:hover { background: linear-gradient(135deg, transparent 0 52%, var(--accent) 52% 60%, transparent 60% 70%, var(--accent) 70% 78%, transparent 78%); }
 
 /* ---------- context menu ---------- */
 .fe-context-menu {
@@ -923,7 +920,7 @@ body.fe-resizing { cursor: col-resize; user-select: none; }
   font: 500 12.5px/1 'IBM Plex Sans', sans-serif;
   color: var(--txt);
 }
-.fe-doc-dot { color: #e8c26a; font-size: 15px; line-height: 0; }
+.fe-doc-dot { color: var(--accent-ink); font-size: 15px; line-height: 0; }
 .fe-doc-sub { font: 400 10px/1 'IBM Plex Mono', monospace; color: var(--mut2); }
 
 .fe-doc-anchor { position: relative; }
@@ -1119,11 +1116,11 @@ body.fe-resizing { cursor: col-resize; user-select: none; }
 .fe-mini-btn:hover { background: var(--btnh); border-color: var(--edge1); color: var(--txt); }
 .fe-mini-danger:hover { background: var(--dangerbg); border-color: var(--danger); color: var(--danger); }
 
-/* ---------- barra de status ---------- */
+/* ---------- status bar ---------- */
 .fe-statusbar .fe-status-doc { color: var(--mut3); }
-.fe-statusbar .fe-status-dirty { color: #e8c26a; }
+.fe-statusbar .fe-status-dirty { color: var(--accent-ink); }
 
-/* ---------- modal (cadastro de ferramenta) ---------- */
+/* ---------- modal (tool registration) ---------- */
 .fe-modal-backdrop {
   position: fixed;
   inset: 0;

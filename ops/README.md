@@ -48,7 +48,7 @@ Runs every five minutes, discovering inventory and collecting telemetry into Pos
 1. **Create the restricted role** (one time):
 
    ```bash
-   docker exec -i flowops-postgres psql -U flow -d flows -v ON_ERROR_STOP=1 <<'SQL'
+   docker compose exec -T postgres psql -U lineos -d lineos -v ON_ERROR_STOP=1 <<'SQL'
    CREATE ROLE flow_collector LOGIN PASSWORD 'set-a-real-password-here';
    GRANT USAGE ON SCHEMA flow TO flow_collector;
    GRANT SELECT, INSERT, UPDATE, DELETE
@@ -63,23 +63,26 @@ Runs every five minutes, discovering inventory and collecting telemetry into Pos
    Verify the role is restricted:
 
    ```bash
-   PGPASSWORD='set-a-real-password-here' psql -h 127.0.0.1 -p 5435 -U flow_collector -d flows \
+   PGPASSWORD='set-a-real-password-here' psql -h 127.0.0.1 -p 5433 -U flow_collector -d lineos \
      -c "DELETE FROM flow.pipeline_bindings" 2>&1 | head -3
    ```
 
    Expected: `ERROR: permission denied for table pipeline_bindings`.
 
-2. **Store the DSN** with mode 600:
+2. **Store the DSN** with mode 600 (the compose file publishes Postgres on
+   `127.0.0.1:5433`, `FLOW_DB_PORT` in `.env`):
 
    ```bash
-   echo 'postgresql://flow_collector:password@127.0.0.1:5435/flows?options=-csearch_path%3Dflow' > ~/.flow-collector-dsn
-   chmod 600 ~/.flow-collector-dsn
+   sudo mkdir -p /etc/lineos
+   echo 'postgresql://flow_collector:password@127.0.0.1:5433/lineos?options=-csearch_path%3Dflow' | sudo tee /etc/lineos/collector-dsn >/dev/null
+   sudo chmod 600 /etc/lineos/collector-dsn
    ```
 
 3. **Create the read-only role on each target database** (one time, per target).
 
-   The collector reads production tables through `lineage_probe_ro` in
-   `warehouse`. It is read-only **at the server**, not by convention:
+   The examples below call the role `lineage_probe_ro`, the database
+   `warehouse` and its container `warehouse-postgres`; use your own names. The
+   role is read-only **at the server**, not by convention:
 
    ```sql
    CREATE ROLE lineage_probe_ro LOGIN PASSWORD 'set-a-real-password-here';
@@ -102,7 +105,7 @@ Runs every five minutes, discovering inventory and collecting telemetry into Pos
    Verify both halves before wiring anything:
 
    ```bash
-   docker exec -e PGPASSWORD="$(cat ~/.flow-probe-ro-pw)" warehouse-postgres \
+   docker exec -e PGPASSWORD="$(sudo cat /etc/lineos/probe_ro_pw)" warehouse-postgres \
      psql -U lineage_probe_ro -d warehouse -tAq \
      -c "SELECT count(*) FROM silver.table_a" \
      -c "CREATE TABLE should_fail (x int)"
@@ -111,10 +114,10 @@ Runs every five minutes, discovering inventory and collecting telemetry into Pos
    Expected: a row count, then `ERROR: cannot execute CREATE TABLE in a
    read-only transaction`.
 
-   Store the password in `~/.flow-probe-ro-pw` with mode 600 and reference it
-   from the target config by path — never inline.
+   Store the password in `/etc/lineos/probe_ro_pw` with mode 600 and reference
+   it from the target config by path — never inline.
 
-4. **Write the target configuration** (`~/.flow-collector-targets.json`,
+4. **Write the target configuration** (`/etc/lineos/collector-targets.json`,
    mode 600).
 
    Keys are the inventory object's `source`; the value describes how to reach
@@ -140,29 +143,28 @@ Runs every five minutes, discovering inventory and collecting telemetry into Pos
    freshness check but is **skipped by table discovery**, which needs a container
    to `docker exec` into — the log says so explicitly.
 
-   The probes reach the target through `docker exec`, not a host IP. Container
-   IPs are reassigned on recreation, and a mirror on this host has already died
-   silently that way once.
+   The probes reach the target through `docker exec`, not a host IP: container
+   IPs are reassigned on recreation, and a probe pinned to one dies silently.
 
    ### How table discovery works
 
    Every cycle, for each configured target, the collector lists `pg_tables` in
    the configured schemas and upserts one inventory object of `kind='table'` per
-   table. Against `warehouse` this finds **50 tables**.
+   table.
 
    Without this step nothing creates a `table` object at all, so no table can be
    bound and the `table` half of the health rules is unreachable rather than
    merely unused.
 
-   Discovery reads **names only** — no counts, no timestamps. Counting fifty
-   tables every five minutes just to populate a dropdown would put real read load
+   Discovery reads **names only** — no counts, no timestamps. Counting every
+   table every five minutes just to populate a dropdown would put real read load
    on a production database for nothing. The row count and the freshness
    timestamp arrive with the freshness check, and only for the tables somebody
    actually bound to a pipeline node.
 
    Freshness timestamps are emitted as canonical UTC by the SQL itself
-   (`to_char(... AT TIME ZONE 'UTC', ...)`), not normalised after the fact. This
-   host runs BRT, and `psql`'s two-digit offset (`-03`) once parsed as UTC
+   (`to_char(... AT TIME ZONE 'UTC', ...)`), not normalised after the fact. On a
+   host outside UTC, `psql`'s two-digit offset (`-03`) once parsed as UTC
    without raising anything — a silent three-hour error in every freshness
    comparison. Do not move that conversion back into the parser.
 

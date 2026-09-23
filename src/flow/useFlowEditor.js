@@ -95,9 +95,9 @@ const initialState = {
   saving: false,
   // Number of the version merely being viewed (null = the current document).
   viewing: null,
-  library: { open: false, items: [], carregando: false, busca: '', lixeira: false },
+  library: { open: false, items: [], loading: false, query: '', trash: false },
   // `versions.open` is the history dropdown, anchored on the document name.
-  versions: { open: false, items: [], arquivos: [], carregando: false },
+  versions: { open: false, items: [], files: [], loading: false },
   // ── Tool catalog ──
   // The built-in ones come from TOOLS; these are the ones users registered on
   // the server (GET /api/tools), and they show up at the top of the list.
@@ -745,25 +745,25 @@ export function useFlowEditor(options = {}) {
     );
   }
 
-  const askName = (padrao) => {
-    const v = window.prompt('Flow name', padrao || '');
+  const askName = (fallback) => {
+    const v = window.prompt('Flow name', fallback || '');
     return v === null ? null : v.trim();
   };
 
   async function loadLibrary() {
-    lib({ carregando: true });
+    lib({ loading: true });
     try {
-      const items = await api.listFlows(libRef.current.busca, libRef.current.lixeira);
-      lib({ items, carregando: false });
+      const items = await api.listFlows(libRef.current.query, libRef.current.trash);
+      lib({ items, loading: false });
     } catch (err) {
-      lib({ carregando: false });
+      lib({ loading: false });
       failure(err, 'library');
     }
   }
 
-  const openLibrary = (lixeira) => {
+  const openLibrary = (trash) => {
     setVersions({ open: false });
-    lib({ open: true, lixeira: !!lixeira });
+    lib({ open: true, trash: !!trash });
     setState({ menu: null, saveOpen: false });
     loadLibrary();
   };
@@ -772,12 +772,12 @@ export function useFlowEditor(options = {}) {
   // runs under a 0.60 CPU ceiling.
   const searchTimerRef = useRef(null);
   const searchLibrary = (v) => {
-    lib({ busca: v });
+    lib({ query: v });
     clearTimeout(searchTimerRef.current);
     searchTimerRef.current = setTimeout(loadLibrary, 250);
   };
   const toggleTrash = () => {
-    lib({ lixeira: !libRef.current.lixeira });
+    lib({ trash: !libRef.current.trash });
     loadLibrary();
   };
 
@@ -869,16 +869,16 @@ export function useFlowEditor(options = {}) {
     }
   }
 
-  async function renameFlow(id, nomeAtual) {
+  async function renameFlow(id, currentName) {
     const target = id || (docRef.current.flow && docRef.current.flow.id);
     if (!target) return;
-    const name = askName(nomeAtual || (docRef.current.flow && docRef.current.flow.name));
+    const name = askName(currentName || (docRef.current.flow && docRef.current.flow.name));
     if (!name) return;
     try {
       const f = await api.renameFlow(target, { name: name });
-      const aberto = docRef.current.flow;
-      if (aberto && aberto.id === f.id) {
-        setState({ flow: { ...aberto, name: f.name, slug: f.slug }, status: 'renamed' });
+      const open = docRef.current.flow;
+      if (open && open.id === f.id) {
+        setState({ flow: { ...open, name: f.name, slug: f.slug }, status: 'renamed' });
       } else {
         setState({ status: 'renamed' });
       }
@@ -888,20 +888,20 @@ export function useFlowEditor(options = {}) {
     }
   }
 
-  async function deleteFlow(id, purgar) {
-    const question = purgar
+  async function deleteFlow(id, purge) {
+    const question = purge
       ? 'Permanently delete this flow, with every version and attachment?'
       : 'Move this flow to the trash?';
     if (!window.confirm(question)) return;
     try {
-      await api.deleteFlow(id, purgar);
-      const aberto = docRef.current.flow;
-      if (aberto && aberto.id === id) {
+      await api.deleteFlow(id, purge);
+      const open = docRef.current.flow;
+      if (open && open.id === id) {
         // The open flow no longer exists: the document stays on screen, but
         // detached from the server, so nothing is lost without warning.
         setState({ flow: null, dirty: true, status: 'flow deleted — the document stays open, unlinked' });
       } else {
-        setState({ status: purgar ? 'flow permanently deleted' : 'flow moved to the trash' });
+        setState({ status: purge ? 'flow permanently deleted' : 'flow moved to the trash' });
       }
       loadLibrary();
     } catch (err) {
@@ -922,15 +922,15 @@ export function useFlowEditor(options = {}) {
   async function reloadVersions() {
     const flow = docRef.current.flow;
     if (!flow) return;
-    setVersions({ carregando: true });
+    setVersions({ loading: true });
     try {
-      const [items, arquivos] = await Promise.all([
+      const [items, files] = await Promise.all([
         api.listVersions(flow.id),
         api.listFiles(flow.id)
       ]);
-      setVersions({ items, arquivos, carregando: false });
+      setVersions({ items, files, loading: false });
     } catch (err) {
-      setVersions({ carregando: false });
+      setVersions({ loading: false });
       failure(err, 'history');
     }
   }
@@ -944,7 +944,7 @@ export function useFlowEditor(options = {}) {
       setVersions({ open: true });
       reloadVersions();
     } else {
-      setVersions({ open: true, items: [], arquivos: [], carregando: false });
+      setVersions({ open: true, items: [], files: [], loading: false });
     }
   };
   const closeVersionsPanel = () => setVersions({ open: false });
@@ -1069,8 +1069,8 @@ export function useFlowEditor(options = {}) {
   };
 
   // The link the other side opens. Built from this tab's URL rather than from
-  // a constant, so it holds both in dev (localhost:5173) and published
-  // (/flow-editor/).
+  // a constant, so it holds both in dev (localhost:5173) and published, at the
+  // root or under a subpath.
   const shareUrl = (token) =>
     window.location.origin + window.location.pathname + '#/share/' + encodeURIComponent(token);
 
@@ -1117,13 +1117,13 @@ export function useFlowEditor(options = {}) {
     }
   };
 
-  async function shareWithUser(email, permission, pronto) {
+  async function shareWithUser(email, permission, onDone) {
     const flow = docRef.current.flow;
     if (!flow) return;
     setShare({ loading: true, error: null, notice: null });
     try {
       const s = await api.shareWithUser(flow.id, email, permission);
-      if (pronto) pronto();
+      if (onDone) onDone();
       setShare({ loading: false, notice: s.name + ' now has access (' + s.permission + ')' });
       loadShare();
     } catch (err) {
@@ -1679,9 +1679,9 @@ export function useFlowEditor(options = {}) {
 
   // ── Sidebar ───────────────────────────────────────────────────────
 
-  const storePref = (chave, valor) => {
+  const storePref = (key, value) => {
     try {
-      localStorage.setItem(chave, valor);
+      localStorage.setItem(key, value);
     } catch (err) {
       /* ignore */
     }
@@ -1699,8 +1699,8 @@ export function useFlowEditor(options = {}) {
   const widthRef = useRef(initialState.sidebarWidth);
   widthRef.current = state.sidebarWidth;
   const prefTimerRef = useRef(null);
-  const resizeSidebar = (largura) => {
-    const w = Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, Math.round(largura)));
+  const resizeSidebar = (width) => {
+    const w = Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, Math.round(width)));
     if (w === widthRef.current) return;
     widthRef.current = w;
     clearTimeout(prefTimerRef.current);

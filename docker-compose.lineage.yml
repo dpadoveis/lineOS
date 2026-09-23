@@ -1,0 +1,40 @@
+# Opt-in: the dataset tabs of the Data Lineage module (schema, preview, stats)
+# read a Postgres of yours, read-only. Layer this file on the base one:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.lineage.yml up -d
+#
+# and set, in .env:
+#
+#   LINEAGE_SOURCE_NETWORK   the Docker network your database is on (created
+#                            outside this project; joined, never managed here)
+#   LINEAGE_SOURCE_HOST      its host name on that network
+#   LINEAGE_SOURCE_DB        the database
+#   LINEAGE_SOURCE_USER      a READ-ONLY role (see docs/DEPLOY.md)
+#   LINEAGE_SOURCE_PASSWORD_FILE  a file on this machine holding its password
+#
+# The password is mounted as a file, never passed as an environment variable
+# (docker inspect would print it).
+
+services:
+  api:
+    environment:
+      DATASET_SOURCE_HOST: ${LINEAGE_SOURCE_HOST:?set LINEAGE_SOURCE_HOST in .env}
+      DATASET_SOURCE_PORT: ${LINEAGE_SOURCE_PORT:-5432}
+      DATASET_SOURCE_DB: ${LINEAGE_SOURCE_DB:?set LINEAGE_SOURCE_DB in .env}
+      DATASET_SOURCE_USER: ${LINEAGE_SOURCE_USER:?set LINEAGE_SOURCE_USER in .env}
+      DATASET_SOURCE_PASSWORD_FILE: /run/secrets/lineage_source_password
+      # Optional: the column "latest rows" sorts by when a binding names no
+      # freshness column. Empty = the table's primary key.
+      DATASET_SOURCE_ORDER_COLUMN: ${LINEAGE_SOURCE_ORDER_COLUMN:-}
+    volumes:
+      - ${LINEAGE_SOURCE_PASSWORD_FILE:-./secrets/lineage_source_password}:/run/secrets/lineage_source_password:ro
+    networks:
+      - lineos
+      # Joining it gives the API reach to every container on that network; the
+      # guard on the data is the read-only role, not the network.
+      - lineage_source
+
+networks:
+  lineage_source:
+    name: ${LINEAGE_SOURCE_NETWORK:?set LINEAGE_SOURCE_NETWORK in .env}
+    external: true

@@ -162,9 +162,67 @@ or path specific to that installation.
 
 ---
 
-## Stage 2 — Buildable node contract
+## Stage 2 — Buildable node contract, on a React Flow editor
 
-Goal: a node in the design says enough to be built and later recognised.
+Goal: a node in the design says enough to be built and later recognised — and
+the editor where that happens is as pleasant to move around as the lineage map.
+The spec, the validation errors and (stage 3) the build status all land on the
+node card, so the canvas and the card are redone once, here, not twice.
+
+Order: 2.1 → 2.2 (design, in parallel with 2.1) → 2.3.
+
+### 2.1 Move the editor onto React Flow
+
+Today `src/flow/` draws its own canvas, and it shows: every mouse move — even a
+hover, which writes the cursor readout into state — re-renders every node, edge
+and group (nothing is memoised); the wheel always zooms, in fixed 10% steps, so
+a trackpad jumps and cannot pan; a pinch zooms the whole browser page (the
+React wheel listener is passive); leaving the canvas mid-gesture drops it
+(`onMouseLeave` ends it); mouse only, left button only; no grab cursor; no fit
+to view, no minimap, zoom capped at 0.35–2.2×. The lineage canvas
+(`src/ops/canvas/`) already solves all of it with `@xyflow/react`, which is a
+dependency.
+
+- **Same payload, same state.** React Flow runs *controlled*: nodes, edges and
+  groups stay in `useFlowEditor`'s reducer, so undo/redo by effect, drafts,
+  versions, the 409, `payload.js`, the API and the MCP do not change. The `y`
+  inversion (trap 1) and document-local ids (trap 2) stay where they are.
+- **Mapping.** Node card → a custom node type; the amber port → a source
+  `Handle` (any node body is a drop target, as today); edge labels → a custom
+  edge with an inline label editor; groups → a group node rendered behind, with
+  membership still decided by `reconcileGroups()` on drag (position, not a
+  list); resize → `NodeResizer` within the 168–720 × 120–900 limits; snap to
+  the 24 px grid → `snapToGrid`; the metadata drop-down stays outside the card
+  so edges stop at the card (trap 14).
+- **Interactions to match the lineage map:** drag to pan, pinch/Ctrl+wheel to
+  zoom, two-finger scroll to pan, pointer capture, fit view on open and on
+  `F`, minimap, controls, zoom 0.1–3×, touch.
+- **Kept as they are:** the context menus, shortcuts (Ctrl+C/V/D/G/S/Z/Y, F2,
+  Delete, Esc), *Arrange* (`organize.js` feeds positions in), the PNG export
+  (`exportPng.js` draws from the data, not the DOM), read-only mode for `view`.
+- One canvas for both modules: shared theme tokens, card chrome and controls
+  between `src/flow/` and `src/ops/canvas/`; React Flow stops being lazy-loaded
+  only for lineage.
+- **Done when:** every feature in the README's *Editor* list works on the new
+  canvas, the `e2e/` specs pass (updated for the first-run screen and wired
+  into CI — closes the open item from stage 0), and pan/zoom stay smooth on a
+  200-node diagram.
+
+### 2.2 Card and panel design (owner: Diogo, in Claude Design)
+
+The visual source of truth for 2.3, delivered as a handoff bundle in
+`design/` **with its `chats/` transcripts**. Covers:
+
+- the node card: name and stack, spec summary (kind, inputs → outputs,
+  schedule), validation state, and room for the stage 3 build status
+  (designed → built → observed → healthy);
+- the spec panel where a node's spec is edited;
+- the validation panel (the list of problems, each jumping to its node);
+- the canvas chrome (controls, minimap, fit) shared with the lineage map.
+
+2.1 does not wait for it: it ships today's card on the new canvas.
+
+### 2.3 The spec, the validator and the export
 
 - Per-node **spec** (stored in the diagram payload, edited in the node panel):
   `kind` (dag / task / dbt model / cron job / table / API), `inputs` and
@@ -178,8 +236,11 @@ Goal: a node in the design says enough to be built and later recognised.
 - **Spec export**: `GET /api/flows/{id}/spec` → a versioned JSON document
   (`lineos-spec/v1`) with nodes, edges, specs and uids — the input of stage 3.
 
-**Stage 2 acceptance:** a designed pipeline exports a spec that validates, and
-the validator catches each rule's failure in a test.
+- Card, spec panel and validation panel built to the 2.2 design.
+
+**Stage 2 acceptance:** the editor runs on React Flow with every existing
+feature intact; a designed pipeline exports a spec that validates, and the
+validator catches each rule's failure in a test.
 
 ---
 
